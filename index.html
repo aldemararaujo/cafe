@@ -64,23 +64,28 @@
     }
   </style>
 </head>
-<body class="bg-stone-50 text-stone-900 font-sans p-4 md:p-8 flex flex-col min-h-screen">
+<body class="bg-stone-50 text-stone-900 font-sans flex flex-col min-h-[100dvh] overflow-x-hidden">
 
-  <div id="app-container" class="max-w-2xl mx-auto space-y-8 w-full">
+  <!-- CABEÇALHO GLOBAL -->
+  <header class="bg-white border-b border-stone-200 px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm shrink-0 w-full">
+    <button id="header-back-btn" class="text-amber-700 hover:text-amber-800 flex items-center gap-1 text-sm font-bold transition-colors hidden-state">
+      <i data-lucide="chevron-left" class="w-6 h-6"></i> Início
+    </button>
+    <div class="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+      <i data-lucide="coffee" class="text-amber-700 w-5 h-5"></i>
+      <h1 class="font-bold tracking-tight text-stone-800 whitespace-nowrap">Mestre do Café</h1>
+    </div>
+    <button id="header-sound-btn" class="p-2 rounded-full transition-colors text-amber-700 bg-amber-50">
+      <i data-lucide="volume-2" id="icon-vol-on" class="w-5 h-5"></i>
+      <i data-lucide="volume-x" id="icon-vol-off" class="w-5 h-5 hidden-state"></i>
+    </button>
+  </header>
+
+  <!-- CONTAINER PRINCIPAL -->
+  <main id="app-container" class="flex-1 w-full max-w-2xl mx-auto p-4 md:p-6 flex flex-col relative">
     
-    <!-- HEADER (Aparece apenas na tela de setup) -->
-    <header id="main-header" class="text-center space-y-2 animate-in">
-      <div class="flex justify-center mb-2">
-        <div class="bg-amber-700 p-3 rounded-2xl shadow-lg">
-          <i data-lucide="coffee" class="text-white w-8 h-8"></i>
-        </div>
-      </div>
-      <h1 class="text-3xl font-bold tracking-tight text-stone-800">Mestre do Café</h1>
-      <p class="text-stone-500 italic">Receitas de Campeões Mundiais na sua mão</p>
-    </header>
-
     <!-- TELA DE SETUP -->
-    <div id="setup-screen" class="space-y-6 animate-in">
+    <div id="setup-screen" class="space-y-6 animate-in flex-1 flex flex-col pb-4">
       <section class="bg-white rounded-3xl p-6 shadow-sm border border-stone-200 space-y-6">
         
         <!-- Slider de Peso -->
@@ -138,7 +143,7 @@
       </div>
       
       <!-- Rodapé Dicas -->
-      <footer class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-4 mt-auto pt-4">
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-200">
           <h4 class="text-xs font-bold text-stone-400 uppercase mb-1">Temperatura</h4>
           <p class="text-sm font-bold text-stone-700">92ºC a 96ºC</p>
@@ -147,11 +152,11 @@
           <h4 class="text-xs font-bold text-stone-400 uppercase mb-1">Dica de Ouro</h4>
           <p class="text-xs text-stone-600 leading-tight">Escalde o filtro de papel antes de colocar o pó!</p>
         </div>
-      </footer>
+      </div>
     </div>
 
     <!-- TELA DE PREPARO (CRONÔMETRO) -->
-    <div id="brew-screen" class="hidden-state flex flex-col h-[90vh] min-h-[600px] w-full max-w-2xl mx-auto animate-in">
+    <div id="brew-screen" class="hidden-state flex flex-col flex-1 w-full animate-in pb-4">
       <div id="brew-main-card" class="bg-white rounded-3xl p-4 md:p-6 shadow-xl border border-stone-200 flex flex-col flex-1 overflow-hidden relative transition-colors duration-300">
         
         <!-- Progresso Visual Superior -->
@@ -159,20 +164,12 @@
           <div id="progress-bar" class="h-full bg-amber-600 transition-all duration-1000" style="width: 0%"></div>
         </div>
 
-        <!-- Controles de Topo -->
-        <div class="flex justify-between items-center pt-2 pb-2 shrink-0">
-          <button id="back-btn" class="text-stone-400 hover:text-stone-600 flex items-center gap-1 text-sm font-medium transition-colors">
-            <i data-lucide="chevron-left" class="w-4 h-4"></i> Voltar
-          </button>
-          <span id="brew-method-name" class="text-sm font-bold text-stone-400 uppercase tracking-widest text-center px-2"></span>
-          <button id="sound-btn" class="p-2 rounded-full transition-colors text-amber-700 bg-amber-50">
-            <i data-lucide="volume-2" id="icon-vol-on" class="w-5 h-5"></i>
-            <i data-lucide="volume-x" id="icon-vol-off" class="w-5 h-5 hidden-state"></i>
-          </button>
+        <div class="flex justify-center pt-3 pb-1 shrink-0">
+          <span id="brew-method-name" class="text-xs font-bold text-stone-400 uppercase tracking-widest text-center px-2 bg-stone-50 py-1 rounded-full border border-stone-100"></span>
         </div>
 
         <!-- Linha do Tempo Horizontal -->
-        <div class="w-full overflow-x-auto py-3 shrink-0 custom-scrollbar">
+        <div class="w-full overflow-x-auto py-2 shrink-0 custom-scrollbar">
           <div id="timeline-container" class="flex gap-2 min-w-max pb-1 px-1">
             <!-- Passos injetados via JS -->
           </div>
@@ -200,7 +197,7 @@
             0:00
           </div>
 
-          <div class="flex gap-4 pt-8 shrink-0">
+          <div class="flex gap-4 pt-6 shrink-0">
             <button id="play-pause-btn" class="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all transform active:scale-90 bg-amber-700 text-white">
               <i data-lucide="play" id="icon-play" class="w-8 h-8 fill-current ml-1"></i>
               <i data-lucide="pause" id="icon-pause" class="w-8 h-8 hidden-state"></i>
@@ -213,7 +210,12 @@
 
       </div>
     </div>
-  </div>
+  </main>
+
+  <!-- RODAPÉ GLOBAL -->
+  <footer class="bg-stone-100 border-t border-stone-200 p-4 text-center text-xs text-stone-500 shrink-0 w-full mt-auto">
+    Copyright @ 2026 Aldemar Araujo Castro
+  </footer>
 
   <script>
     const METHODS = [
@@ -278,7 +280,6 @@
 
     // Referências DOM
     const DOM = {
-      header: document.getElementById('main-header'),
       setupScreen: document.getElementById('setup-screen'),
       brewScreen: document.getElementById('brew-screen'),
       brewMainCard: document.getElementById('brew-main-card'),
@@ -289,8 +290,8 @@
       grindDisplay: document.getElementById('grind-display'),
       methodDescription: document.getElementById('method-description'),
       startBtn: document.getElementById('start-btn'),
-      backBtn: document.getElementById('back-btn'),
-      soundBtn: document.getElementById('sound-btn'),
+      headerBackBtn: document.getElementById('header-back-btn'),
+      headerSoundBtn: document.getElementById('header-sound-btn'),
       iconVolOn: document.getElementById('icon-vol-on'),
       iconVolOff: document.getElementById('icon-vol-off'),
       playPauseBtn: document.getElementById('play-pause-btn'),
@@ -554,34 +555,34 @@
     DOM.startBtn.addEventListener('click', () => {
       state.isBrewing = true;
       initAudio();
-      DOM.header.classList.add('hidden-state');
       DOM.setupScreen.classList.add('hidden-state');
       DOM.brewScreen.classList.remove('hidden-state');
+      DOM.headerBackBtn.classList.remove('hidden-state');
       DOM.brewMethodName.textContent = state.selectedMethod.name;
       renderBrewScreen();
     });
 
-    DOM.backBtn.addEventListener('click', () => {
+    DOM.headerBackBtn.addEventListener('click', () => {
       resetTimer();
       state.isBrewing = false;
-      DOM.header.classList.remove('hidden-state');
       DOM.setupScreen.classList.remove('hidden-state');
       DOM.brewScreen.classList.add('hidden-state');
+      DOM.headerBackBtn.classList.add('hidden-state');
     });
 
     DOM.playPauseBtn.addEventListener('click', toggleTimer);
     DOM.resetBtn.addEventListener('click', resetTimer);
 
-    DOM.soundBtn.addEventListener('click', () => {
+    DOM.headerSoundBtn.addEventListener('click', () => {
       state.soundEnabled = !state.soundEnabled;
       if (state.soundEnabled) {
-        DOM.soundBtn.classList.replace('text-stone-400', 'text-amber-700');
-        DOM.soundBtn.classList.replace('bg-stone-100', 'bg-amber-50');
+        DOM.headerSoundBtn.classList.replace('text-stone-400', 'text-amber-700');
+        DOM.headerSoundBtn.classList.replace('bg-stone-100', 'bg-amber-50');
         DOM.iconVolOn.classList.remove('hidden-state');
         DOM.iconVolOff.classList.add('hidden-state');
       } else {
-        DOM.soundBtn.classList.replace('text-amber-700', 'text-stone-400');
-        DOM.soundBtn.classList.replace('bg-amber-50', 'bg-stone-100');
+        DOM.headerSoundBtn.classList.replace('text-amber-700', 'text-stone-400');
+        DOM.headerSoundBtn.classList.replace('bg-amber-50', 'bg-stone-100');
         DOM.iconVolOn.classList.add('hidden-state');
         DOM.iconVolOff.classList.remove('hidden-state');
       }
