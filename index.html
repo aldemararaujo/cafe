@@ -112,7 +112,7 @@
             <i data-lucide="settings" class="w-4 h-4"></i> ESCOLHA O MÉTODO
           </label>
           <div id="methods-container" class="grid gap-3">
-            <!-- Os botões dos métodos serão injetados aqui via JS -->
+            <!-- Os cards dos métodos serão injetados aqui via JS -->
           </div>
         </div>
 
@@ -227,12 +227,12 @@
         ratio: 15, // 1:15
         grind: 'Grossa (tipo sal marinho)',
         steps: [
-          { time: 0, duration: 10, title: '1º Despejo (Doçura)', action: 'Despeje 15% da água total em movimentos circulares.', percent: 0.15 },
-          { time: 45, duration: 10, title: '2º Despejo (Acidez)', action: 'Despeje mais 15% da água total.', percent: 0.15 },
-          { time: 90, duration: 15, title: '3º Despejo (Força)', action: 'Despeje 23.3% da água total.', percent: 0.233 },
-          { time: 135, duration: 15, title: '4º Despejo (Força)', action: 'Despeje mais 23.3% da água total.', percent: 0.233 },
-          { time: 180, duration: 15, title: '5º Despejo Final', action: 'Despeje os últimos 23.4% da água.', percent: 0.234 },
-          { time: 210, duration: 0, title: 'Pronto', action: 'Sua extração terminou, aproveite seu café!', percent: 0 },
+          { time: 0, duration: 10, title: '1º Despejo', subtitle: 'Doçura', action: 'Despeje 15% da água total em movimentos circulares.', percent: 0.15 },
+          { time: 45, duration: 10, title: '2º Despejo', subtitle: 'Acidez', action: 'Despeje mais 15% da água total.', percent: 0.15 },
+          { time: 90, duration: 15, title: '3º Despejo', subtitle: 'Força', action: 'Despeje 23.3% da água total.', percent: 0.233 },
+          { time: 135, duration: 15, title: '4º Despejo', subtitle: 'Força', action: 'Despeje mais 23.3% da água total.', percent: 0.233 },
+          { time: 180, duration: 15, title: '5º Despejo', subtitle: 'Finalização', action: 'Despeje os últimos 23.4% da água.', percent: 0.234 },
+          { time: 210, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'Sua extração terminou, aproveite seu café!', percent: 0 },
         ]
       },
       {
@@ -243,11 +243,11 @@
         ratio: 16.6, // 60g per 1000ml
         grind: 'Média-Fina',
         steps: [
-          { time: 0, duration: 15, title: 'Bloom (Floração)', action: 'Despeje 2x o peso do café e mexa a mistura para saturar todo o pó.', percent: 0.12 },
-          { time: 45, duration: 30, title: 'Primeira Fase', action: 'Despeje até atingir 60% do peso total da água de forma rápida.', percent: 0.48 },
-          { time: 75, duration: 30, title: 'Segunda Fase', action: 'Despeje o restante da água suavemente e com controle.', percent: 0.40 },
-          { time: 105, duration: 10, title: 'Agitação Final', action: 'Dê uma leve volta com a colher e um giro no suporte do filtro.', percent: 0 },
-          { time: 210, duration: 0, title: 'Pronto', action: 'A extração terminou, aproveite seu café!', percent: 0 },
+          { time: 0, duration: 15, title: 'Bloom', subtitle: 'Floração', action: 'Despeje 2x o peso do café e mexa a mistura para saturar todo o pó.', percent: 0.12 },
+          { time: 45, duration: 30, title: '1ª Fase', subtitle: 'Rápida', action: 'Despeje até atingir 60% do peso total da água de forma rápida.', percent: 0.48 },
+          { time: 75, duration: 30, title: '2ª Fase', subtitle: 'Suave', action: 'Despeje o restante da água suavemente e com controle.', percent: 0.40 },
+          { time: 105, duration: 10, title: 'Agitação', subtitle: 'Final', action: 'Dê uma leve volta com a colher e um giro no suporte do filtro.', percent: 0 },
+          { time: 210, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'A extração terminou, aproveite seu café!', percent: 0 },
         ]
       },
       {
@@ -258,10 +258,10 @@
         ratio: 16,
         grind: 'Média (tipo areia fina)',
         steps: [
-          { time: 0, duration: 10, title: 'Bloom', action: 'Despeje 3x o peso do café em água para umedecer bem.', percent: 0.18 },
-          { time: 30, duration: 60, title: 'Despejo Principal', action: 'Despeje o restante da água de forma bem lenta e constante.', percent: 0.82 },
-          { time: 150, duration: 0, title: 'Drenagem', action: 'Aguarde a extração descer por completo.', percent: 0 },
-          { time: 180, duration: 0, title: 'Pronto', action: 'A extração terminou, aproveite seu café!', percent: 0 },
+          { time: 0, duration: 10, title: 'Bloom', subtitle: 'Umedecer', action: 'Despeje 3x o peso do café em água para umedecer bem.', percent: 0.18 },
+          { time: 30, duration: 60, title: 'Despejo', subtitle: 'Principal', action: 'Despeje o restante da água de forma bem lenta e constante.', percent: 0.82 },
+          { time: 150, duration: 0, title: 'Drenagem', subtitle: 'Aguardar', action: 'Aguarde a extração descer por completo.', percent: 0 },
+          { time: 180, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'A extração terminou, aproveite seu café!', percent: 0 },
         ]
       }
     ];
@@ -270,6 +270,9 @@
     let state = {
       coffeeWeight: 20,
       selectedMethod: METHODS[0],
+      currentSteps: [],
+      tetsuFlavor: 'balanced',
+      tetsuStrength: 'normal',
       timerActive: false,
       seconds: 0,
       isBrewing: false,
@@ -322,8 +325,42 @@
       return Math.round(state.coffeeWeight * state.selectedMethod.ratio);
     }
 
+    function generateTetsuSteps() {
+      let steps = [];
+      let currentTime = 0;
+      const interval = 45;
+
+      // Calculando Sabor (40% da água)
+      let p1, p2;
+      if (state.tetsuFlavor === 'sweet') { p1 = 0.133; p2 = 0.267; }
+      else if (state.tetsuFlavor === 'acidic') { p1 = 0.267; p2 = 0.133; }
+      else { p1 = 0.20; p2 = 0.20; }
+
+      steps.push({ time: currentTime, duration: 10, title: '1º Despejo', subtitle: state.tetsuFlavor === 'sweet' ? 'Doçura' : (state.tetsuFlavor === 'acidic' ? 'Acidez' : 'Equilíbrio'), action: 'Despeje em movimentos circulares do centro para as bordas.', percent: p1 });
+      currentTime += interval;
+      steps.push({ time: currentTime, duration: 10, title: '2º Despejo', subtitle: 'Sabor', action: 'Despeje a água, cobrindo todo o pó uniformemente.', percent: p2 });
+      currentTime += interval;
+
+      // Calculando Força (60% da água)
+      let strengthPours;
+      if (state.tetsuStrength === 'light') strengthPours = 2;
+      else if (state.tetsuStrength === 'strong') strengthPours = 4;
+      else strengthPours = 3;
+
+      let strengthPercent = 0.60 / strengthPours;
+
+      for (let i = 0; i < strengthPours; i++) {
+        steps.push({ time: currentTime, duration: 15, title: `${i + 3}º Despejo`, subtitle: 'Força', action: 'Despeje a água suavemente no centro.', percent: strengthPercent });
+        currentTime += interval;
+      }
+
+      steps.push({ time: currentTime, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'Sua extração terminou, aproveite seu café!', percent: 0 });
+
+      return steps;
+    }
+
     function getActiveStep() {
-      const stepsReversed = [...state.selectedMethod.steps].reverse();
+      const stepsReversed = [...state.currentSteps].reverse();
       return stepsReversed.find(step => state.seconds >= step.time) || null;
     }
 
@@ -399,26 +436,99 @@
       DOM.methodsContainer.innerHTML = '';
       METHODS.forEach(method => {
         const isSelected = state.selectedMethod.id === method.id;
-        const btn = document.createElement('button');
-        btn.className = `p-4 rounded-2xl border-2 text-left transition-all w-full ${isSelected ? 'border-amber-700 bg-amber-50 shadow-inner' : 'border-stone-100 bg-stone-50 hover:border-stone-200'}`;
         
-        btn.innerHTML = `
-          <div class="flex justify-between items-start">
+        // Criamos uma DIV em vez de BUTTON para evitar aninhamento de botões no HTML,
+        // o que causa problemas na Web e em dispositivos móveis.
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border-2 transition-all w-full relative overflow-visible ${isSelected ? 'border-amber-700 bg-amber-50 shadow-inner' : 'border-stone-100 bg-stone-50 hover:border-stone-200'}`;
+        
+        // O cabeçalho da área age como o seletor do método
+        let cardHTML = `
+          <div class="flex justify-between items-start cursor-pointer method-selector" data-id="${method.id}">
             <div>
-              <h3 class="font-bold text-stone-800">${method.name}</h3>
-              <p class="text-xs text-amber-700 font-medium">${method.champion}</p>
+              <h3 class="font-bold text-stone-800 pointer-events-none">${method.name}</h3>
+              <p class="text-xs text-amber-700 font-medium pointer-events-none">${method.champion}</p>
             </div>
-            ${isSelected ? '<i data-lucide="check-circle-2" class="text-amber-700 w-5 h-5"></i>' : ''}
+            ${isSelected ? '<i data-lucide="check-circle-2" class="text-amber-700 w-5 h-5 pointer-events-none"></i>' : ''}
           </div>
         `;
-        
-        btn.onclick = () => {
-          state.selectedMethod = method;
-          renderSetup();
-        };
-        
-        DOM.methodsContainer.appendChild(btn);
+
+        // Se o método Kasuya estiver selecionado, injeta a personalização dentro do próprio card
+        if (isSelected && method.id === 'tetsu-46') {
+          cardHTML += `
+            <div class="mt-4 pt-4 border-t border-amber-200/60 space-y-5 animate-in">
+              <!-- Sabor -->
+              <div class="space-y-2">
+                <div class="flex items-center gap-1.5">
+                  <label class="text-xs font-bold text-amber-900 uppercase tracking-widest">Sabor (Primeiros 40%)</label>
+                  <div class="group relative flex items-center justify-center">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 cursor-help"></i>
+                    <!-- Tooltip -->
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block group-active:block w-48 p-2.5 bg-stone-800 text-stone-100 text-xs rounded-xl shadow-xl z-10 text-center font-normal tracking-normal normal-case pointer-events-none">
+                      Ajuste a proporção dos dois primeiros despejos, pois despejar mais água logo no início traz mais doçura.
+                      <!-- Seta do Tooltip -->
+                      <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button data-type="flavor" data-value="sweet" class="${state.tetsuFlavor === 'sweet' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 bg-amber-100 text-amber-900 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 bg-white text-stone-500 hover:bg-stone-50 transition-all text-center cursor-pointer'}">Mais Doce</button>
+                  <button data-type="flavor" data-value="balanced" class="${state.tetsuFlavor === 'balanced' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 bg-amber-100 text-amber-900 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 bg-white text-stone-500 hover:bg-stone-50 transition-all text-center cursor-pointer'}">Equilíbrio</button>
+                  <button data-type="flavor" data-value="acidic" class="${state.tetsuFlavor === 'acidic' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 bg-amber-100 text-amber-900 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 bg-white text-stone-500 hover:bg-stone-50 transition-all text-center cursor-pointer'}">Mais Ácido</button>
+                </div>
+              </div>
+              
+              <!-- Força -->
+              <div class="space-y-2">
+                <div class="flex items-center gap-1.5">
+                  <label class="text-xs font-bold text-amber-900 uppercase tracking-widest">Força (Últimos 60%)</label>
+                  <div class="group relative flex items-center justify-center">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 cursor-help"></i>
+                    <!-- Tooltip -->
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block group-active:block w-48 p-2.5 bg-stone-800 text-stone-100 text-xs rounded-xl shadow-xl z-10 text-center font-normal tracking-normal normal-case pointer-events-none">
+                      O número de despejos na segunda fase altera o corpo do café, o que significa que mais despejos criam uma bebida mais intensa.
+                      <!-- Seta do Tooltip -->
+                      <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-800"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button data-type="strength" data-value="light" class="${state.tetsuStrength === 'light' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 bg-amber-100 text-amber-900 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 bg-white text-stone-500 hover:bg-stone-50 transition-all text-center cursor-pointer'}">Mais Leve</button>
+                  <button data-type="strength" data-value="normal" class="${state.tetsuStrength === 'normal' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 bg-amber-100 text-amber-900 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 bg-white text-stone-500 hover:bg-stone-50 transition-all text-center cursor-pointer'}">Normal</button>
+                  <button data-type="strength" data-value="strong" class="${state.tetsuStrength === 'strong' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 bg-amber-100 text-amber-900 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 bg-white text-stone-500 hover:bg-stone-50 transition-all text-center cursor-pointer'}">Mais Forte</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        card.innerHTML = cardHTML;
+        DOM.methodsContainer.appendChild(card);
       });
+
+      // Adicionar listeners para os elementos dentro da lista gerada agora
+      const methodSelectors = DOM.methodsContainer.querySelectorAll('.method-selector');
+      methodSelectors.forEach(selector => {
+        selector.addEventListener('click', () => {
+          const id = selector.getAttribute('data-id');
+          state.selectedMethod = METHODS.find(m => m.id === id);
+          renderSetup();
+        });
+      });
+
+      const customBtns = DOM.methodsContainer.querySelectorAll('button[data-type]');
+      customBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const type = btn.getAttribute('data-type');
+          const value = btn.getAttribute('data-value');
+          if (type === 'flavor') state.tetsuFlavor = value;
+          if (type === 'strength') state.tetsuStrength = value;
+          
+          e.stopPropagation(); // Previne que o clique dispare eventos no elemento pai
+          renderSetup();
+        });
+      });
+
       lucide.createIcons();
     }
 
@@ -426,7 +536,7 @@
       DOM.timelineContainer.innerHTML = '';
       const activeStep = getActiveStep();
       
-      state.selectedMethod.steps.forEach((step, idx) => {
+      state.currentSteps.forEach((step, idx) => {
         const isCompleted = activeStep && activeStep.time > step.time;
         const isCurrent = activeStep?.time === step.time;
 
@@ -437,9 +547,17 @@
           : 'bg-white border-stone-200'
         }`;
 
+        let volumeHtml = '';
+        if (step.percent > 0) {
+          const ml = Math.round(getTotalWater() * step.percent);
+          volumeHtml = `<span class="text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full ${isCurrent ? 'bg-amber-700 text-amber-50' : 'bg-stone-100 text-stone-500'}">${ml}ml</span>`;
+        }
+
         el.innerHTML = `
           <span class="text-xs font-mono font-bold ${isCurrent ? 'text-amber-100' : 'text-stone-400'}">${formatTime(step.time)}</span>
-          <span class="text-[11px] text-center leading-tight mt-1 font-semibold ${isCurrent ? 'text-white' : 'text-stone-600'}">${step.title}</span>
+          <span class="text-[11px] text-center leading-tight mt-1 font-bold ${isCurrent ? 'text-white' : 'text-stone-700'}">${step.title}</span>
+          <span class="text-[10px] text-center leading-tight mt-0.5 font-medium ${isCurrent ? 'text-amber-200' : 'text-stone-500'}">${step.subtitle}</span>
+          ${volumeHtml}
         `;
         DOM.timelineContainer.appendChild(el);
         
@@ -454,14 +572,14 @@
     function renderBrewScreen() {
       DOM.timerDisplay.textContent = formatTime(state.seconds);
       
-      const totalStepsTime = state.selectedMethod.steps[state.selectedMethod.steps.length - 1].time;
+      const totalStepsTime = state.currentSteps[state.currentSteps.length - 1].time;
       const progress = Math.min((state.seconds / totalStepsTime) * 100, 100);
       DOM.progressBar.style.width = `${progress}%`;
 
       const activeStep = getActiveStep();
       
       if (activeStep) {
-        DOM.activeStepTitle.textContent = activeStep.title;
+        DOM.activeStepTitle.textContent = activeStep.title + (activeStep.subtitle ? ', ' + activeStep.subtitle : '');
         DOM.activeStepAction.textContent = activeStep.action;
         
         if (activeStep.percent > 0 || activeStep.duration > 0) {
@@ -507,12 +625,12 @@
     function tick() {
       state.seconds++;
       
-      const currentStep = state.selectedMethod.steps.find(step => step.time === state.seconds);
+      const currentStep = state.currentSteps.find(step => step.time === state.seconds);
       if (currentStep && state.lastBeepSecond !== state.seconds) {
         state.lastBeepSecond = state.seconds;
         triggerVisualAlert();
         
-        const isLast = state.selectedMethod.steps.indexOf(currentStep) === state.selectedMethod.steps.length - 1;
+        const isLast = state.currentSteps.indexOf(currentStep) === state.currentSteps.length - 1;
         if (isLast) {
           playEndTone();
         } else {
@@ -554,6 +672,13 @@
 
     DOM.startBtn.addEventListener('click', () => {
       state.isBrewing = true;
+      
+      if (state.selectedMethod.id === 'tetsu-46') {
+        state.currentSteps = generateTetsuSteps();
+      } else {
+        state.currentSteps = state.selectedMethod.steps;
+      }
+
       initAudio();
       DOM.setupScreen.classList.add('hidden-state');
       DOM.brewScreen.classList.remove('hidden-state');
