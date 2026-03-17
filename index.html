@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mestre do Café</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Ícones -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f5f5f4;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #d6d3d1;
+      border-radius: 4px;
+    }
+    .animate-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hidden-state {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="bg-stone-50 text-stone-900 font-sans p-4 md:p-8 flex flex-col min-h-screen">
+
+  <div id="app-container" class="max-w-2xl mx-auto space-y-8 w-full">
+    
+    <!-- HEADER (Aparece apenas na tela de setup) -->
+    <header id="main-header" class="text-center space-y-2 animate-in">
+      <div class="flex justify-center mb-2">
+        <div class="bg-amber-700 p-3 rounded-2xl shadow-lg">
+          <i data-lucide="coffee" class="text-white w-8 h-8"></i>
+        </div>
+      </div>
+      <h1 class="text-3xl font-bold tracking-tight text-stone-800">Mestre do Café</h1>
+      <p class="text-stone-500 italic">Receitas de Campeões Mundiais na sua mão</p>
+    </header>
+
+    <!-- TELA DE SETUP -->
+    <div id="setup-screen" class="space-y-6 animate-in">
+      <section class="bg-white rounded-3xl p-6 shadow-sm border border-stone-200 space-y-6">
+        
+        <!-- Slider de Peso -->
+        <div class="space-y-4">
+          <label class="flex items-center gap-2 text-sm font-semibold text-stone-600">
+            <i data-lucide="scale" class="w-4 h-4"></i> QUANTO CAFÉ VOCÊ VAI USAR?
+          </label>
+          <div class="flex items-center gap-4">
+            <input 
+              type="range" 
+              id="coffee-weight"
+              min="10" 
+              max="60" 
+              value="20" 
+              class="flex-1 h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-amber-700"
+            />
+            <span id="weight-display" class="text-2xl font-bold text-amber-900 w-16 text-right">20g</span>
+          </div>
+        </div>
+
+        <!-- Seleção de Método -->
+        <div class="space-y-4">
+          <label class="flex items-center gap-2 text-sm font-semibold text-stone-600">
+            <i data-lucide="settings" class="w-4 h-4"></i> ESCOLHA O MÉTODO
+          </label>
+          <div id="methods-container" class="grid gap-3">
+            <!-- Os botões dos métodos serão injetados aqui via JS -->
+          </div>
+        </div>
+
+        <!-- Resumo -->
+        <div class="p-4 bg-amber-900 text-amber-50 rounded-2xl flex justify-between items-center shadow-md">
+          <div class="space-y-1">
+            <p class="text-xs opacity-80 uppercase tracking-widest">Água Total</p>
+            <p id="total-water-display" class="text-2xl font-bold">300 ml</p>
+          </div>
+          <div class="h-10 w-[1px] bg-amber-800"></div>
+          <div class="space-y-1 text-right">
+            <p class="text-xs opacity-80 uppercase tracking-widest">Moagem</p>
+            <p id="grind-display" class="font-semibold">Grossa (tipo sal marinho)</p>
+          </div>
+        </div>
+
+        <button id="start-btn" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-4 rounded-2xl shadow-lg shadow-amber-200 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+          COMEÇAR EXTRAÇÃO <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+        </button>
+      </section>
+
+      <div class="bg-stone-200/50 rounded-2xl p-4 flex gap-3 items-start">
+        <i data-lucide="info" class="text-stone-400 shrink-0 w-5 h-5"></i>
+        <p id="method-description" class="text-sm text-stone-600"></p>
+      </div>
+      
+      <!-- Rodapé Dicas -->
+      <footer class="grid grid-cols-2 gap-4">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-200">
+          <h4 class="text-xs font-bold text-stone-400 uppercase mb-1">Temperatura</h4>
+          <p class="text-sm font-bold text-stone-700">92ºC a 96ºC</p>
+        </div>
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-200">
+          <h4 class="text-xs font-bold text-stone-400 uppercase mb-1">Dica</h4>
+          <p class="text-xs text-stone-600 leading-tight">Escalde o filtro antes de começar!</p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- TELA DE PREPARO (CRONÔMETRO) -->
+    <div id="brew-screen" class="hidden-state flex flex-col h-[90vh] min-h-[600px] w-full max-w-2xl mx-auto animate-in">
+      <div class="bg-white rounded-3xl p-4 md:p-6 shadow-xl border border-stone-200 flex flex-col flex-1 overflow-hidden relative">
+        
+        <!-- Progresso Visual Superior -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-stone-100">
+          <div id="progress-bar" class="h-full bg-amber-600 transition-all duration-1000" style="width: 0%"></div>
+        </div>
+
+        <!-- Controles de Topo -->
+        <div class="flex justify-between items-center pt-2 pb-2 shrink-0">
+          <button id="back-btn" class="text-stone-400 hover:text-stone-600 flex items-center gap-1 text-sm font-medium transition-colors">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i> Voltar
+          </button>
+          <span id="brew-method-name" class="text-sm font-bold text-stone-400 uppercase tracking-widest"></span>
+          <button id="sound-btn" class="p-2 rounded-full transition-colors text-amber-700 bg-amber-50">
+            <i data-lucide="volume-2" id="icon-vol-on" class="w-5 h-5"></i>
+            <i data-lucide="volume-x" id="icon-vol-off" class="w-5 h-5 hidden-state"></i>
+          </button>
+        </div>
+
+        <!-- Linha do Tempo Horizontal -->
+        <div class="w-full overflow-x-auto py-3 shrink-0 custom-scrollbar">
+          <div id="timeline-container" class="flex gap-2 min-w-max pb-1 px-1">
+            <!-- Passos injetados via JS -->
+          </div>
+        </div>
+
+        <!-- Passo Atual em Destaque -->
+        <div id="active-step-card" class="shrink-0 rounded-2xl p-5 border flex flex-col justify-center text-center relative shadow-sm transition-colors duration-500 mb-2 mt-2 bg-amber-50 border-amber-100">
+          <span id="active-step-title" class="text-xs font-bold uppercase tracking-widest block mb-2 text-amber-700"></span>
+          <p id="active-step-action" class="text-stone-800 font-medium text-lg leading-snug mb-4">
+            Inicie o cronômetro para ver as instruções de preparo.
+          </p>
+          <div id="active-step-badges" class="flex flex-wrap items-center justify-center gap-3 hidden-state">
+            <div id="badge-water" class="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-800 rounded-full text-sm font-bold shadow-sm border border-blue-100">
+              <i data-lucide="droplets" class="w-3.5 h-3.5"></i> <span id="water-amount"></span>
+            </div>
+            <div id="badge-time" class="flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-sm font-bold shadow-sm border border-amber-200">
+              <i data-lucide="clock" class="w-3.5 h-3.5"></i> <span id="time-amount"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cronômetro Gigante e Controles -->
+        <div class="flex-1 flex flex-col items-center justify-center min-h-[180px]">
+          <div id="timer-display" class="text-[5rem] md:text-8xl font-mono font-black tracking-tighter tabular-nums drop-shadow-sm leading-none transition-colors duration-500 text-stone-800">
+            0:00
+          </div>
+
+          <div class="flex gap-4 pt-8 shrink-0">
+            <button id="play-pause-btn" class="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all transform active:scale-90 bg-amber-700 text-white">
+              <i data-lucide="play" id="icon-play" class="w-8 h-8 fill-current ml-1"></i>
+              <i data-lucide="pause" id="icon-pause" class="w-8 h-8 hidden-state"></i>
+            </button>
+            <button id="reset-btn" class="w-16 h-16 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center hover:bg-stone-200 transition-all">
+              <i data-lucide="rotate-ccw" class="w-7 h-7"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const METHODS = [
+      {
+        id: 'tetsu-46',
+        name: 'Tetsu Kasuya (Método 4:6)',
+        champion: 'World Brewers Cup Champion 2016',
+        description: 'Focado em ajustar doçura e acidez através de despejos controlados.',
+        ratio: 15, // 1:15
+        grind: 'Grossa (tipo sal marinho)',
+        steps: [
+          { time: 0, duration: 10, title: '1º Despejo (Doçura)', action: 'Despeje 15% da água total em movimentos circulares.', percent: 0.15 },
+          { time: 45, duration: 10, title: '2º Despejo (Acidez)', action: 'Despeje mais 15% da água total.', percent: 0.15 },
+          { time: 90, duration: 15, title: '3º Despejo (Força)', action: 'Despeje 23.3% da água total.', percent: 0.233 },
+          { time: 135, duration: 15, title: '4º Despejo (Força)', action: 'Despeje mais 23.3% da água total.', percent: 0.233 },
+          { time: 180, duration: 15, title: '5º Despejo Final', action: 'Despeje os últimos 23.4% da água.', percent: 0.234 },
+          { time: 210, duration: 0, title: 'Pronto', action: 'Sua extração terminou, aproveite seu café!', percent: 0 },
+        ]
+      },
+      {
+        id: 'hoffmann-v60',
+        name: 'James Hoffmann V60',
+        champion: 'World Barista Champion 2007',
+        description: 'A técnica definitiva para uma extração uniforme e limpa.',
+        ratio: 16.6, // 60g per 1000ml
+        grind: 'Média-Fina',
+        steps: [
+          { time: 0, duration: 15, title: 'Bloom (Floração)', action: 'Despeje 2x o peso do café e mexa para saturar todo o pó.', percent: 0.12 },
+          { time: 45, duration: 30, title: 'Primeira Fase', action: 'Despeje até atingir 60% do peso total da água.', percent: 0.48 },
+          { time: 75, duration: 30, title: 'Segunda Fase', action: 'Despeje o restante da água suavemente.', percent: 0.40 },
+          { time: 105, duration: 10, title: 'Agitação Final', action: 'Dê uma leve volta com a colher e um giro no V60.', percent: 0 },
+          { time: 210, duration: 0, title: 'Pronto', action: 'A extração terminou, aproveite seu café!', percent: 0 },
+        ]
+      },
+      {
+        id: 'standard-pour',
+        name: 'Proporção Áurea (Padrão)',
+        champion: 'SCA Standard',
+        description: 'Um método equilibrado e seguro para o dia a dia.',
+        ratio: 16,
+        grind: 'Média',
+        steps: [
+          { time: 0, duration: 10, title: 'Bloom', action: 'Despeje 3x o peso do café em água.', percent: 0.18 },
+          { time: 30, duration: 60, title: 'Despejo Principal', action: 'Despeje o restante da água de forma lenta e constante.', percent: 0.82 },
+          { time: 150, duration: 0, title: 'Drenagem', action: 'Aguarde a extração completa.', percent: 0 },
+          { time: 180, duration: 0, title: 'Pronto', action: 'A extração terminou, aproveite seu café!', percent: 0 },
+        ]
+      }
+    ];
+
+    // Estado da aplicação
+    let state = {
+      coffeeWeight: 20,
+      selectedMethod: METHODS[0],
+      timerActive: false,
+      seconds: 0,
+      isBrewing: false,
+      soundEnabled: true,
+      lastBeepSecond: -1,
+      timerInterval: null
+    };
+
+    // Referências DOM
+    const DOM = {
+      header: document.getElementById('main-header'),
+      setupScreen: document.getElementById('setup-screen'),
+      brewScreen: document.getElementById('brew-screen'),
+      coffeeWeightInput: document.getElementById('coffee-weight'),
+      weightDisplay: document.getElementById('weight-display'),
+      methodsContainer: document.getElementById('methods-container'),
+      totalWaterDisplay: document.getElementById('total-water-display'),
+      grindDisplay: document.getElementById('grind-display'),
+      methodDescription: document.getElementById('method-description'),
+      startBtn: document.getElementById('start-btn'),
+      backBtn: document.getElementById('back-btn'),
+      soundBtn: document.getElementById('sound-btn'),
+      iconVolOn: document.getElementById('icon-vol-on'),
+      iconVolOff: document.getElementById('icon-vol-off'),
+      playPauseBtn: document.getElementById('play-pause-btn'),
+      iconPlay: document.getElementById('icon-play'),
+      iconPause: document.getElementById('icon-pause'),
+      resetBtn: document.getElementById('reset-btn'),
+      timerDisplay: document.getElementById('timer-display'),
+      progressBar: document.getElementById('progress-bar'),
+      brewMethodName: document.getElementById('brew-method-name'),
+      timelineContainer: document.getElementById('timeline-container'),
+      activeStepCard: document.getElementById('active-step-card'),
+      activeStepTitle: document.getElementById('active-step-title'),
+      activeStepAction: document.getElementById('active-step-action'),
+      activeStepBadges: document.getElementById('active-step-badges'),
+      waterAmount: document.getElementById('water-amount'),
+      timeAmount: document.getElementById('time-amount')
+    };
+
+    // Áudio Context global (inicializado sob demanda)
+    let audioCtx = null;
+
+    // Utilitários
+    function formatTime(s) {
+      const mins = Math.floor(s / 60);
+      const secs = s % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function getTotalWater() {
+      return Math.round(state.coffeeWeight * state.selectedMethod.ratio);
+    }
+
+    function getActiveStep() {
+      const stepsReversed = [...state.selectedMethod.steps].reverse();
+      return stepsReversed.find(step => state.seconds >= step.time) || null;
+    }
+
+    // Gerenciamento de Áudio
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playBeep() {
+      if (!state.soundEnabled) return;
+      try {
+        initAudio();
+        const playTone = (startTime) => {
+          const osc = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          osc.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, startTime);
+          osc.frequency.exponentialRampToValueAtTime(440, startTime + 0.3);
+          gainNode.gain.setValueAtTime(0.5, startTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+          osc.start(startTime);
+          osc.stop(startTime + 0.3);
+        };
+        playTone(audioCtx.currentTime);
+        playTone(audioCtx.currentTime + 0.4);
+      } catch (e) { console.log("Áudio não suportado", e); }
+    }
+
+    function playEndTone() {
+      if (!state.soundEnabled) return;
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime + 2.5);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 3.1);
+      } catch (e) { console.log("Áudio não suportado", e); }
+    }
+
+    function triggerVisualAlert() {
+      DOM.activeStepCard.classList.remove('bg-amber-50', 'border-amber-100');
+      DOM.activeStepCard.classList.add('bg-amber-100', 'border-amber-300');
+      DOM.activeStepTitle.classList.remove('text-amber-700');
+      DOM.activeStepTitle.classList.add('text-amber-900');
+      DOM.timerDisplay.classList.remove('text-stone-800');
+      DOM.timerDisplay.classList.add('text-amber-800');
+
+      setTimeout(() => {
+        DOM.activeStepCard.classList.remove('bg-amber-100', 'border-amber-300');
+        DOM.activeStepCard.classList.add('bg-amber-50', 'border-amber-100');
+        DOM.activeStepTitle.classList.remove('text-amber-900');
+        DOM.activeStepTitle.classList.add('text-amber-700');
+        DOM.timerDisplay.classList.remove('text-amber-800');
+        DOM.timerDisplay.classList.add('text-stone-800');
+      }, 3000);
+    }
+
+    // Renderização
+    function renderSetup() {
+      DOM.weightDisplay.textContent = `${state.coffeeWeight}g`;
+      DOM.totalWaterDisplay.textContent = `${getTotalWater()} ml`;
+      DOM.grindDisplay.textContent = state.selectedMethod.grind;
+      DOM.methodDescription.textContent = state.selectedMethod.description;
+
+      // Renderizar botões de método
+      DOM.methodsContainer.innerHTML = '';
+      METHODS.forEach(method => {
+        const isSelected = state.selectedMethod.id === method.id;
+        const btn = document.createElement('button');
+        btn.className = `p-4 rounded-2xl border-2 text-left transition-all w-full ${isSelected ? 'border-amber-700 bg-amber-50 shadow-inner' : 'border-stone-100 bg-stone-50 hover:border-stone-200'}`;
+        
+        btn.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="font-bold text-stone-800">${method.name}</h3>
+              <p class="text-xs text-amber-700 font-medium">${method.champion}</p>
+            </div>
+            ${isSelected ? '<i data-lucide="check-circle-2" class="text-amber-700 w-5 h-5"></i>' : ''}
+          </div>
+        `;
+        
+        btn.onclick = () => {
+          state.selectedMethod = method;
+          renderSetup();
+        };
+        
+        DOM.methodsContainer.appendChild(btn);
+      });
+      lucide.createIcons();
+    }
+
+    function renderTimeline() {
+      DOM.timelineContainer.innerHTML = '';
+      const activeStep = getActiveStep();
+      
+      state.selectedMethod.steps.forEach((step, idx) => {
+        const isCompleted = activeStep && activeStep.time > step.time;
+        const isCurrent = activeStep?.time === step.time;
+
+        const el = document.createElement('div');
+        el.className = `flex flex-col items-center justify-center p-2 rounded-xl border w-[110px] shrink-0 transition-all ${
+          isCurrent ? 'bg-amber-600 border-amber-700 shadow-md transform scale-[1.02]' 
+          : isCompleted ? 'bg-stone-50 border-stone-200 opacity-60' 
+          : 'bg-white border-stone-200'
+        }`;
+
+        el.innerHTML = `
+          <span class="text-xs font-mono font-bold ${isCurrent ? 'text-amber-100' : 'text-stone-400'}">${formatTime(step.time)}</span>
+          <span class="text-[11px] text-center leading-tight mt-1 font-semibold ${isCurrent ? 'text-white' : 'text-stone-600'}">${step.title}</span>
+        `;
+        DOM.timelineContainer.appendChild(el);
+        
+        // Fazer scroll automático na linha do tempo se for o item atual
+        if (isCurrent) {
+          setTimeout(() => {
+             el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }, 100);
+        }
+      });
+    }
+
+    function renderBrewScreen() {
+      DOM.timerDisplay.textContent = formatTime(state.seconds);
+      
+      const totalStepsTime = state.selectedMethod.steps[state.selectedMethod.steps.length - 1].time;
+      const progress = Math.min((state.seconds / totalStepsTime) * 100, 100);
+      DOM.progressBar.style.width = `${progress}%`;
+
+      const activeStep = getActiveStep();
+      
+      if (activeStep) {
+        DOM.activeStepTitle.textContent = activeStep.title;
+        DOM.activeStepAction.textContent = activeStep.action;
+        
+        if (activeStep.percent > 0 || activeStep.duration > 0) {
+          DOM.activeStepBadges.classList.remove('hidden-state');
+          
+          if (activeStep.percent > 0) {
+            document.getElementById('badge-water').classList.remove('hidden-state');
+            DOM.waterAmount.textContent = `${Math.round(getTotalWater() * activeStep.percent)}ml`;
+          } else {
+            document.getElementById('badge-water').classList.add('hidden-state');
+          }
+
+          if (activeStep.duration > 0) {
+            document.getElementById('badge-time').classList.remove('hidden-state');
+            DOM.timeAmount.textContent = `Despeje em ${activeStep.duration}s`;
+          } else {
+            document.getElementById('badge-time').classList.add('hidden-state');
+          }
+        } else {
+          DOM.activeStepBadges.classList.add('hidden-state');
+        }
+      } else {
+        DOM.activeStepTitle.textContent = '';
+        DOM.activeStepAction.textContent = 'Inicie o cronômetro para ver as instruções de preparo.';
+        DOM.activeStepBadges.classList.add('hidden-state');
+      }
+
+      // Atualiza botões
+      if (state.timerActive) {
+        DOM.playPauseBtn.classList.replace('bg-amber-700', 'bg-amber-100');
+        DOM.playPauseBtn.classList.replace('text-white', 'text-amber-700');
+        DOM.iconPlay.classList.add('hidden-state');
+        DOM.iconPause.classList.remove('hidden-state');
+      } else {
+        DOM.playPauseBtn.classList.replace('bg-amber-100', 'bg-amber-700');
+        DOM.playPauseBtn.classList.replace('text-amber-700', 'text-white');
+        DOM.iconPlay.classList.remove('hidden-state');
+        DOM.iconPause.classList.add('hidden-state');
+      }
+
+      renderTimeline();
+    }
+
+    // Lógica do Timer
+    function tick() {
+      state.seconds++;
+      
+      const currentStep = state.selectedMethod.steps.find(step => step.time === state.seconds);
+      if (currentStep && state.lastBeepSecond !== state.seconds) {
+        state.lastBeepSecond = state.seconds;
+        triggerVisualAlert();
+        
+        const isLast = state.selectedMethod.steps.indexOf(currentStep) === state.selectedMethod.steps.length - 1;
+        if (isLast) {
+          playEndTone();
+        } else {
+          playBeep();
+        }
+      }
+      
+      renderBrewScreen();
+    }
+
+    function toggleTimer() {
+      initAudio();
+      state.timerActive = !state.timerActive;
+      if (state.timerActive) {
+        state.timerInterval = setInterval(tick, 1000);
+      } else {
+        clearInterval(state.timerInterval);
+      }
+      renderBrewScreen();
+    }
+
+    function resetTimer() {
+      clearInterval(state.timerInterval);
+      state.timerActive = false;
+      state.seconds = 0;
+      state.lastBeepSecond = -1;
+      renderBrewScreen();
+    }
+
+    // Event Listeners
+    DOM.coffeeWeightInput.addEventListener('input', (e) => {
+      state.coffeeWeight = Number(e.target.value);
+      renderSetup();
+    });
+
+    DOM.startBtn.addEventListener('click', () => {
+      state.isBrewing = true;
+      initAudio();
+      DOM.header.classList.add('hidden-state');
+      DOM.setupScreen.classList.add('hidden-state');
+      DOM.brewScreen.classList.remove('hidden-state');
+      DOM.brewMethodName.textContent = state.selectedMethod.name;
+      renderBrewScreen();
+    });
+
+    DOM.backBtn.addEventListener('click', () => {
+      resetTimer();
+      state.isBrewing = false;
+      DOM.header.classList.remove('hidden-state');
+      DOM.setupScreen.classList.remove('hidden-state');
+      DOM.brewScreen.classList.add('hidden-state');
+    });
+
+    DOM.playPauseBtn.addEventListener('click', toggleTimer);
+    DOM.resetBtn.addEventListener('click', resetTimer);
+
+    DOM.soundBtn.addEventListener('click', () => {
+      state.soundEnabled = !state.soundEnabled;
+      if (state.soundEnabled) {
+        DOM.soundBtn.classList.replace('text-stone-400', 'text-amber-700');
+        DOM.soundBtn.classList.replace('bg-stone-100', 'bg-amber-50');
+        DOM.iconVolOn.classList.remove('hidden-state');
+        DOM.iconVolOff.classList.add('hidden-state');
+      } else {
+        DOM.soundBtn.classList.replace('text-amber-700', 'text-stone-400');
+        DOM.soundBtn.classList.replace('bg-amber-50', 'bg-stone-100');
+        DOM.iconVolOn.classList.add('hidden-state');
+        DOM.iconVolOff.classList.remove('hidden-state');
+      }
+    });
+
+    // Inicialização
+    renderSetup();
+    lucide.createIcons();
+  </script>
+</body>
+</html>
