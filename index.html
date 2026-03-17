@@ -11,7 +11,7 @@
   <!-- Fontes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   
   <!-- Ícones -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -40,6 +40,27 @@
     }
     .hidden-state {
       display: none !important;
+    }
+    
+    /* Animação para o Alarme Visual */
+    @keyframes pulseAlert {
+      0%, 100% { 
+        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); 
+        border-color: #fef3c7;
+        background-color: #fffbeb;
+      }
+      50% { 
+        box-shadow: 0 0 25px 5px rgba(217, 119, 6, 0.4); 
+        border-color: #d97706;
+        background-color: #fef3c7;
+      }
+    }
+    .alert-active {
+      animation: pulseAlert 1.5s ease-in-out 2;
+    }
+    .timer-pulse {
+      transform: scale(1.1);
+      color: #b45309; /* text-amber-700 */
     }
   </style>
 </head>
@@ -99,7 +120,7 @@
           <div class="h-10 w-[1px] bg-amber-800"></div>
           <div class="space-y-1 text-right">
             <p class="text-xs opacity-80 uppercase tracking-widest">Moagem</p>
-            <p id="grind-display" class="font-semibold">Grossa (tipo sal marinho)</p>
+            <p id="grind-display" class="font-semibold text-sm">Grossa</p>
           </div>
         </div>
 
@@ -108,9 +129,12 @@
         </button>
       </section>
 
-      <div class="bg-stone-200/50 rounded-2xl p-4 flex gap-3 items-start">
-        <i data-lucide="info" class="text-stone-400 shrink-0 w-5 h-5"></i>
-        <p id="method-description" class="text-sm text-stone-600"></p>
+      <div class="bg-stone-200/50 rounded-2xl p-5 flex gap-3 items-start border border-stone-200">
+        <i data-lucide="info" class="text-stone-400 shrink-0 w-6 h-6 mt-1"></i>
+        <div class="space-y-1">
+          <h4 class="text-sm font-bold text-stone-700">Princípios do Método</h4>
+          <p id="method-description" class="text-sm text-stone-600 leading-relaxed"></p>
+        </div>
       </div>
       
       <!-- Rodapé Dicas -->
@@ -120,15 +144,15 @@
           <p class="text-sm font-bold text-stone-700">92ºC a 96ºC</p>
         </div>
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-200">
-          <h4 class="text-xs font-bold text-stone-400 uppercase mb-1">Dica</h4>
-          <p class="text-xs text-stone-600 leading-tight">Escalde o filtro antes de começar!</p>
+          <h4 class="text-xs font-bold text-stone-400 uppercase mb-1">Dica de Ouro</h4>
+          <p class="text-xs text-stone-600 leading-tight">Escalde o filtro de papel antes de colocar o pó!</p>
         </div>
       </footer>
     </div>
 
     <!-- TELA DE PREPARO (CRONÔMETRO) -->
     <div id="brew-screen" class="hidden-state flex flex-col h-[90vh] min-h-[600px] w-full max-w-2xl mx-auto animate-in">
-      <div class="bg-white rounded-3xl p-4 md:p-6 shadow-xl border border-stone-200 flex flex-col flex-1 overflow-hidden relative">
+      <div id="brew-main-card" class="bg-white rounded-3xl p-4 md:p-6 shadow-xl border border-stone-200 flex flex-col flex-1 overflow-hidden relative transition-colors duration-300">
         
         <!-- Progresso Visual Superior -->
         <div class="absolute top-0 left-0 w-full h-2 bg-stone-100">
@@ -140,7 +164,7 @@
           <button id="back-btn" class="text-stone-400 hover:text-stone-600 flex items-center gap-1 text-sm font-medium transition-colors">
             <i data-lucide="chevron-left" class="w-4 h-4"></i> Voltar
           </button>
-          <span id="brew-method-name" class="text-sm font-bold text-stone-400 uppercase tracking-widest"></span>
+          <span id="brew-method-name" class="text-sm font-bold text-stone-400 uppercase tracking-widest text-center px-2"></span>
           <button id="sound-btn" class="p-2 rounded-full transition-colors text-amber-700 bg-amber-50">
             <i data-lucide="volume-2" id="icon-vol-on" class="w-5 h-5"></i>
             <i data-lucide="volume-x" id="icon-vol-off" class="w-5 h-5 hidden-state"></i>
@@ -155,8 +179,8 @@
         </div>
 
         <!-- Passo Atual em Destaque -->
-        <div id="active-step-card" class="shrink-0 rounded-2xl p-5 border flex flex-col justify-center text-center relative shadow-sm transition-colors duration-500 mb-2 mt-2 bg-amber-50 border-amber-100">
-          <span id="active-step-title" class="text-xs font-bold uppercase tracking-widest block mb-2 text-amber-700"></span>
+        <div id="active-step-card" class="shrink-0 rounded-2xl p-5 border flex flex-col justify-center text-center relative shadow-sm transition-all duration-300 mb-2 mt-2 bg-amber-50 border-amber-100">
+          <span id="active-step-title" class="text-xs font-bold uppercase tracking-widest block mb-2 text-amber-700 transition-colors duration-300"></span>
           <p id="active-step-action" class="text-stone-800 font-medium text-lg leading-snug mb-4">
             Inicie o cronômetro para ver as instruções de preparo.
           </p>
@@ -172,7 +196,7 @@
 
         <!-- Cronômetro Gigante e Controles -->
         <div class="flex-1 flex flex-col items-center justify-center min-h-[180px]">
-          <div id="timer-display" class="text-[5rem] md:text-8xl font-mono font-black tracking-tighter tabular-nums drop-shadow-sm leading-none transition-colors duration-500 text-stone-800">
+          <div id="timer-display" class="text-[5rem] md:text-8xl font-mono font-black tracking-tighter tabular-nums drop-shadow-sm leading-none transition-all duration-300 text-stone-800">
             0:00
           </div>
 
@@ -197,7 +221,7 @@
         id: 'tetsu-46',
         name: 'Tetsu Kasuya (Método 4:6)',
         champion: 'World Brewers Cup Champion 2016',
-        description: 'Focado em ajustar doçura e acidez através de despejos controlados.',
+        description: 'O Método 4:6 divide a água em duas partes e utiliza a proporção de 1:15 (1g de café para 15ml de água). Os primeiros 40% controlam o equilíbrio entre doçura e acidez, pois mais água no primeiro despejo aumenta a doçura, enquanto mais no segundo aumenta a acidez. Os 60% restantes definem a força e a intensidade do café. Tudo isso usando uma moagem mais grossa para uma extração bem limpa.',
         ratio: 15, // 1:15
         grind: 'Grossa (tipo sal marinho)',
         steps: [
@@ -213,14 +237,14 @@
         id: 'hoffmann-v60',
         name: 'James Hoffmann V60',
         champion: 'World Barista Champion 2007',
-        description: 'A técnica definitiva para uma extração uniforme e limpa.',
+        description: 'Esta técnica foca na extração máxima e uniforme, usando a proporção de 60g de café para 1 litro de água (aproximadamente 1:16.6). Utiliza água muito quente e uma moagem mais fina. O giro vigoroso (swirl) durante o bloom garante que todo o pó seja molhado. O despejo contínuo mantém a temperatura alta no filtro, e o giro final nivela a cama de café de forma perfeita, o que evita a criação de canais por onde a água passaria rápido demais.',
         ratio: 16.6, // 60g per 1000ml
         grind: 'Média-Fina',
         steps: [
-          { time: 0, duration: 15, title: 'Bloom (Floração)', action: 'Despeje 2x o peso do café e mexa para saturar todo o pó.', percent: 0.12 },
-          { time: 45, duration: 30, title: 'Primeira Fase', action: 'Despeje até atingir 60% do peso total da água.', percent: 0.48 },
-          { time: 75, duration: 30, title: 'Segunda Fase', action: 'Despeje o restante da água suavemente.', percent: 0.40 },
-          { time: 105, duration: 10, title: 'Agitação Final', action: 'Dê uma leve volta com a colher e um giro no V60.', percent: 0 },
+          { time: 0, duration: 15, title: 'Bloom (Floração)', action: 'Despeje 2x o peso do café e mexa a mistura para saturar todo o pó.', percent: 0.12 },
+          { time: 45, duration: 30, title: 'Primeira Fase', action: 'Despeje até atingir 60% do peso total da água de forma rápida.', percent: 0.48 },
+          { time: 75, duration: 30, title: 'Segunda Fase', action: 'Despeje o restante da água suavemente e com controle.', percent: 0.40 },
+          { time: 105, duration: 10, title: 'Agitação Final', action: 'Dê uma leve volta com a colher e um giro no suporte do filtro.', percent: 0 },
           { time: 210, duration: 0, title: 'Pronto', action: 'A extração terminou, aproveite seu café!', percent: 0 },
         ]
       },
@@ -228,13 +252,13 @@
         id: 'standard-pour',
         name: 'Proporção Áurea (Padrão)',
         champion: 'SCA Standard',
-        description: 'Um método equilibrado e seguro para o dia a dia.',
+        description: 'A proporção de 1:16 (1g de café para 16ml de água) é o padrão de ouro da Associação de Cafés Especiais para uma xícara bem equilibrada. O bloom inicial libera o dióxido de carbono retido na torra, preparando o pó para receber a água. O despejo principal lento extrai os óleos e sabores de forma bastante homogênea e constante.',
         ratio: 16,
-        grind: 'Média',
+        grind: 'Média (tipo areia fina)',
         steps: [
-          { time: 0, duration: 10, title: 'Bloom', action: 'Despeje 3x o peso do café em água.', percent: 0.18 },
-          { time: 30, duration: 60, title: 'Despejo Principal', action: 'Despeje o restante da água de forma lenta e constante.', percent: 0.82 },
-          { time: 150, duration: 0, title: 'Drenagem', action: 'Aguarde a extração completa.', percent: 0 },
+          { time: 0, duration: 10, title: 'Bloom', action: 'Despeje 3x o peso do café em água para umedecer bem.', percent: 0.18 },
+          { time: 30, duration: 60, title: 'Despejo Principal', action: 'Despeje o restante da água de forma bem lenta e constante.', percent: 0.82 },
+          { time: 150, duration: 0, title: 'Drenagem', action: 'Aguarde a extração descer por completo.', percent: 0 },
           { time: 180, duration: 0, title: 'Pronto', action: 'A extração terminou, aproveite seu café!', percent: 0 },
         ]
       }
@@ -257,6 +281,7 @@
       header: document.getElementById('main-header'),
       setupScreen: document.getElementById('setup-screen'),
       brewScreen: document.getElementById('brew-screen'),
+      brewMainCard: document.getElementById('brew-main-card'),
       coffeeWeightInput: document.getElementById('coffee-weight'),
       weightDisplay: document.getElementById('weight-display'),
       methodsContainer: document.getElementById('methods-container'),
@@ -284,10 +309,8 @@
       timeAmount: document.getElementById('time-amount')
     };
 
-    // Áudio Context global (inicializado sob demanda)
     let audioCtx = null;
 
-    // Utilitários
     function formatTime(s) {
       const mins = Math.floor(s / 60);
       const secs = s % 60;
@@ -303,7 +326,7 @@
       return stepsReversed.find(step => state.seconds >= step.time) || null;
     }
 
-    // Gerenciamento de Áudio
+    // Gerenciamento de Áudio e Alertas Visuais
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -354,20 +377,14 @@
     }
 
     function triggerVisualAlert() {
-      DOM.activeStepCard.classList.remove('bg-amber-50', 'border-amber-100');
-      DOM.activeStepCard.classList.add('bg-amber-100', 'border-amber-300');
-      DOM.activeStepTitle.classList.remove('text-amber-700');
-      DOM.activeStepTitle.classList.add('text-amber-900');
-      DOM.timerDisplay.classList.remove('text-stone-800');
-      DOM.timerDisplay.classList.add('text-amber-800');
-
+      // Adiciona o brilho e pulso no container inteiro e no timer
+      DOM.activeStepCard.classList.add('alert-active');
+      DOM.timerDisplay.classList.add('timer-pulse');
+      
+      // Remove após a animação de 3 segundos
       setTimeout(() => {
-        DOM.activeStepCard.classList.remove('bg-amber-100', 'border-amber-300');
-        DOM.activeStepCard.classList.add('bg-amber-50', 'border-amber-100');
-        DOM.activeStepTitle.classList.remove('text-amber-900');
-        DOM.activeStepTitle.classList.add('text-amber-700');
-        DOM.timerDisplay.classList.remove('text-amber-800');
-        DOM.timerDisplay.classList.add('text-stone-800');
+        DOM.activeStepCard.classList.remove('alert-active');
+        DOM.timerDisplay.classList.remove('timer-pulse');
       }, 3000);
     }
 
@@ -378,7 +395,6 @@
       DOM.grindDisplay.textContent = state.selectedMethod.grind;
       DOM.methodDescription.textContent = state.selectedMethod.description;
 
-      // Renderizar botões de método
       DOM.methodsContainer.innerHTML = '';
       METHODS.forEach(method => {
         const isSelected = state.selectedMethod.id === method.id;
@@ -426,7 +442,6 @@
         `;
         DOM.timelineContainer.appendChild(el);
         
-        // Fazer scroll automático na linha do tempo se for o item atual
         if (isCurrent) {
           setTimeout(() => {
              el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -473,7 +488,6 @@
         DOM.activeStepBadges.classList.add('hidden-state');
       }
 
-      // Atualiza botões
       if (state.timerActive) {
         DOM.playPauseBtn.classList.replace('bg-amber-700', 'bg-amber-100');
         DOM.playPauseBtn.classList.replace('text-white', 'text-amber-700');
@@ -489,7 +503,6 @@
       renderTimeline();
     }
 
-    // Lógica do Timer
     function tick() {
       state.seconds++;
       
@@ -525,10 +538,14 @@
       state.timerActive = false;
       state.seconds = 0;
       state.lastBeepSecond = -1;
+      
+      // Limpa os efeitos de alerta caso seja resetado no meio
+      DOM.activeStepCard.classList.remove('alert-active');
+      DOM.timerDisplay.classList.remove('timer-pulse');
+      
       renderBrewScreen();
     }
 
-    // Event Listeners
     DOM.coffeeWeightInput.addEventListener('input', (e) => {
       state.coffeeWeight = Number(e.target.value);
       renderSetup();
@@ -570,7 +587,6 @@
       }
     });
 
-    // Inicialização
     renderSetup();
     lucide.createIcons();
   </script>
