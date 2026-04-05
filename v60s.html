@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Hario Switch & Calculadora</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --coffee-dark: #3E2723;
+            --coffee-medium: #795548;
+            --coffee-light: #D7CCC8;
+            --bg-cream: #FAFAFA;
+            --paper: #FFFFFF;
+            --accent: #D84315;
+            --green: #2E7D32;
+            --text-main: #212121;
+            --text-secondary: #757575;
+            --input-border: #E0E0E0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
+        body { 
+            background-color: var(--bg-cream); 
+            color: var(--text-main); 
+            line-height: 1.6; 
+            padding-bottom: 40px; /* Reduzido padding bottom geral */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; flex: 1; width: 100%;}
+
+        /* Header */
+        header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--coffee-light); }
+        h1 { color: var(--coffee-dark); font-size: 1.8rem; margin-bottom: 5px; }
+        p.subtitle { color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* Tabs */
+        .tabs { display: flex; background: var(--paper); border-radius: 12px; padding: 5px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); gap: 5px; }
+        .tab-btn { flex: 1; border: none; background: transparent; padding: 10px; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; border-radius: 8px; transition: all 0.3s ease; }
+        .tab-btn.active { background-color: var(--coffee-dark); color: white; box-shadow: 0 4px 6px rgba(62, 39, 35, 0.2); }
+
+        /* Content */
+        .recipe-content { display: none; animation: fadeIn 0.4s ease; }
+        .recipe-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cards */
+        .card { background: var(--paper); border-radius: 16px; padding: 15px 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid var(--coffee-medium); position: relative; }
+        .card h2 { color: var(--coffee-dark); font-size: 1.2rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+        /* Header com Mini Timer (Discreto) */
+        .step-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;}
+        .step-header-flex h2 { margin-bottom: 0; }
+        .mini-timer { display: flex; align-items: center; gap: 4px; background: #f5f5f5; padding: 6px 12px; border-radius: 20px; border: 1px solid var(--coffee-light); }
+        .mini-timer span { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--coffee-dark); margin-right: 8px; font-size: 1.1rem;}
+        .mini-timer button { background: none; border: none; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%; transition: 0.2s; }
+        .mini-timer button:hover { color: var(--accent); background: #e0e0e0; }
+
+        /* Inputs & Form */
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .form-col { flex: 1; }
+        
+        label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        
+        input[type="number"], select {
+            width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 8px;
+            font-size: 1rem; color: var(--coffee-dark); background: #fff; outline: none; transition: border 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--accent); }
+
+        /* Dynamic Pour List */
+        .pour-item { background: #f5f5f5; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .pour-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .pour-title { font-weight: bold; font-size: 0.9rem; color: var(--coffee-dark); }
+        .remove-btn { color: #d32f2f; background: none; border: none; font-size: 0.8rem; cursor: pointer; padding: 5px; }
+
+        /* Switch Toggle UI */
+        .switch-toggle { display: flex; background: #e0e0e0; border-radius: 20px; padding: 2px; width: 100%; cursor: pointer; position: relative; }
+        .switch-option { flex: 1; text-align: center; font-size: 0.8rem; padding: 8px 0; z-index: 2; transition: color 0.3s; font-weight: 600; }
+        .switch-bg { position: absolute; top: 2px; bottom: 2px; width: 50%; background: white; border-radius: 18px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1; }
+        
+        .pour-item[data-switch="open"] .switch-bg { transform: translateX(0); background: #fff; }
+        .pour-item[data-switch="open"] .opt-open { color: var(--text-main); }
+        .pour-item[data-switch="open"] .opt-closed { color: #999; }
+
+        .pour-item[data-switch="closed"] .switch-bg { transform: translateX(100%); background: var(--accent); }
+        .pour-item[data-switch="closed"] .opt-open { color: #999; }
+        .pour-item[data-switch="closed"] .opt-closed { color: white; }
+
+        .btn-add { width: 100%; background: var(--coffee-dark); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+        .btn-add:hover { background-color: #5D4037; }
+
+        /* Profile Bars */
+        .profile-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.85rem; }
+        .profile-label { width: 70px; font-weight: 600; color: var(--text-secondary); }
+        .bar-container { flex: 1; background: var(--coffee-light); height: 8px; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--coffee-medium); border-radius: 4px; transition: width 0.5s ease; }
+
+        .result-box { background: var(--coffee-dark); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-top: 20px; }
+        .total-time-display { font-size: 2rem; font-weight: 700; }
+        .total-label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.8; }
+
+        .variables-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+        .variable-item { background: var(--bg-cream); padding: 10px; border-radius: 8px; text-align: center; }
+        .variable-label { display: block; font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; }
+        .variable-value { font-weight: 700; color: var(--coffee-dark); font-size: 1rem; }
+        
+        /* Steps UI com destaques visuais */
+        .step-list { list-style: none; }
+        .step-item { display: flex; gap: 15px; margin-bottom: 10px; padding: 15px 10px; border-bottom: 1px solid var(--coffee-light); border-radius: 8px; border: 2px solid transparent; transition: all 0.3s ease; }
+        .step-number { background: var(--coffee-dark); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 0.9rem; margin-top: 2px; }
+        .tip-box { background-color: #E3F2FD; border-left: 4px solid #2196F3; padding: 8px 12px; border-radius: 0 8px 8px 0; font-size: 0.85rem; margin-top: 8px; color: #0D47A1; }
+        .switch-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; border: 1px solid #ccc; background: #eee; color: #555; }
+        .switch-badge.closed { background: #FFCCBC; color: #D84315; border-color: #FFAB91; }
+
+        /* Estilos do Timer Custom (Aba 3) */
+        .timer-section { background: var(--coffee-dark); color: white; padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(62, 39, 35, 0.2); }
+        .timer-display { font-size: 3.5rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 5px 0; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .timer-status { font-size: 0.9rem; margin-bottom: 15px; min-height: 1.5em; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+        .timer-controls { display: flex; gap: 10px; justify-content: center; }
+        .btn-timer { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 10px 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; }
+        .btn-start { background: var(--green); color: white; }
+        .btn-pause { background: #F57C00; color: white; }
+        .btn-reset { background: #e0e0e0; color: #333; }
+        .btn-timer:active { transform: scale(0.95); }
+
+        /* Estado Ativo Global (Serve para a lista fixa e para a lista dinâmica) */
+        .active-step, .active-pour { 
+            border-color: var(--accent); 
+            background: #FFF8E1; 
+            transform: scale(1.02); 
+            box-shadow: 0 4px 12px rgba(216, 67, 21, 0.15);
+            border-bottom: 2px solid var(--accent);
+        }
+        .active-pour .pour-title { color: var(--accent); font-size: 1rem; }
+        .finished-step, .finished-pour { opacity: 0.5; filter: grayscale(50%); border-bottom: 1px solid var(--coffee-light); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: auto;
+            border-top: 1px solid var(--coffee-light);
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>V60 Switch</h1>
+        <p class="subtitle">Guia & Calculadora de Extração</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openRecipe('classic')">Clássica</button>
+        <button class="tab-btn" onclick="openRecipe('hybrid')">Híbrida</button>
+        <button class="tab-btn" onclick="openRecipe('custom')">Personalizada</button>
+    </div>
+
+    <!-- ================= RECEITA CLÁSSICA ================= -->
+    <div id="classic" class="recipe-content active">
+        <div class="card">
+            <h2><i data-lucide="bar-chart-2"></i> Perfil na Xícara</h2>
+            <div class="profile-row"><span class="profile-label">Corpo</span><div class="bar-container"><div class="bar-fill" style="width: 90%;"></div></div></div>
+            <div class="profile-row"><span class="profile-label">Doçura</span><div class="bar-container"><div class="bar-fill" style="width: 85%;"></div></div></div>
+            <div class="profile-row"><span class="profile-label">Acidez</span><div class="bar-container"><div class="bar-fill" style="width: 40%;"></div></div></div>
+        </div>
+        
+        <div class="card" style="border-left-color: var(--accent);">
+            <div class="step-header-flex">
+                <h2><i data-lucide="play-circle"></i> Passo a Passo</h2>
+                <!-- Timer Discreto -->
+                <div class="mini-timer">
+                    <span id="classic-timer-display">00:00</span>
+                    <button onclick="startTimer()"><i data-lucide="play" size="18"></i></button>
+                    <button onclick="pauseTimer()"><i data-lucide="pause" size="18"></i></button>
+                    <button onclick="resetTimer()"><i data-lucide="rotate-ccw" size="18"></i></button>
+                </div>
+            </div>
+
+            <ul class="step-list">
+                <li class="step-item" id="classic-step-0">
+                    <div class="step-number">1</div>
+                    <div><span class="switch-badge closed">SWITCH FECHADO</span><p><strong>Imersão Total (0:00 a 2:00):</strong> Coloque 300ml de água (96°C) e depois 20g de café. Misture e aguarde.</p></div>
+                </li>
+                <li class="step-item" id="classic-step-1">
+                    <div class="step-number">2</div>
+                    <div><span class="switch-badge">SWITCH ABERTO</span><p><strong>Drawdown (2:00 a 3:30):</strong> Abra a chave. O fluxo deve terminar próximo de 3 minutos e meio.</p></div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ================= RECEITA HÍBRIDA ================= -->
+    <div id="hybrid" class="recipe-content">
+        <div class="card">
+            <h2><i data-lucide="bar-chart-2"></i> Perfil na Xícara</h2>
+            <div class="profile-row"><span class="profile-label">Corpo</span><div class="bar-container"><div class="bar-fill" style="width: 60%;"></div></div></div>
+            <div class="profile-row"><span class="profile-label">Doçura</span><div class="bar-container"><div class="bar-fill" style="width: 80%;"></div></div></div>
+            <div class="profile-row"><span class="profile-label">Acidez</span><div class="bar-container"><div class="bar-fill" style="width: 90%;"></div></div></div>
+        </div>
+        
+        <div class="card" style="border-left-color: var(--accent);">
+            <div class="step-header-flex">
+                <h2><i data-lucide="play-circle"></i> Passo a Passo</h2>
+                <!-- Timer Discreto -->
+                <div class="mini-timer">
+                    <span id="hybrid-timer-display">00:00</span>
+                    <button onclick="startTimer()"><i data-lucide="play" size="18"></i></button>
+                    <button onclick="pauseTimer()"><i data-lucide="pause" size="18"></i></button>
+                    <button onclick="resetTimer()"><i data-lucide="rotate-ccw" size="18"></i></button>
+                </div>
+            </div>
+
+            <ul class="step-list">
+                <li class="step-item" id="hybrid-step-0">
+                    <div class="step-number">1</div>
+                    <div><span class="switch-badge">SWITCH ABERTO</span><p><strong>Bloom (0:00 a 0:30):</strong> Despeje 60g de água, espere 30s.</p></div>
+                </li>
+                <li class="step-item" id="hybrid-step-1">
+                    <div class="step-number">2</div>
+                    <div><span class="switch-badge">SWITCH ABERTO</span><p><strong>Fluxo (0:30 a 1:15):</strong> Despeje mais 60g. Deixe drenar.</p></div>
+                </li>
+                <li class="step-item" id="hybrid-step-2">
+                    <div class="step-number">3</div>
+                    <div><span class="switch-badge closed">SWITCH FECHADO</span><p><strong>Imersão (1:15 a 3:00):</strong> Feche a chave. Adicione 160g de água (idealmente a 70°C). Aguarde em imersão.</p></div>
+                </li>
+                <li class="step-item" id="hybrid-step-3">
+                    <div class="step-number">4</div>
+                    <div><span class="switch-badge">SWITCH ABERTO</span><p><strong>Finalização (3:00+):</strong> Abra a chave. Aguarde finalizar o drawdown.</p></div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ================= CALCULADORA PERSONALIZADA ================= -->
+    <div id="custom" class="recipe-content">
+        
+        <!-- Timer Interativo (Grande) -->
+        <div class="timer-section">
+            <h2><i data-lucide="clock"></i> Controle de Extração</h2>
+            <div class="timer-display" id="main-timer">00:00</div>
+            <div class="timer-status" id="timer-status">Pronto para iniciar</div>
+            <div class="timer-controls">
+                <button class="btn-timer btn-start" onclick="startTimer()"><i data-lucide="play" size="18"></i> Iniciar</button>
+                <button class="btn-timer btn-pause" onclick="pauseTimer()"><i data-lucide="pause" size="18"></i> Pausar</button>
+                <button class="btn-timer btn-reset" onclick="resetTimer()"><i data-lucide="rotate-ccw" size="18"></i> Zerar</button>
+            </div>
+        </div>
+
+        <!-- Área de Resultados (Fica no topo para feedback visual) -->
+        <div class="card" id="live-results">
+            <h2><i data-lucide="activity"></i> Análise Prevista</h2>
+            <div class="profile-row"><span class="profile-label">Corpo</span><div class="bar-container"><div id="custom-body" class="bar-fill" style="width: 50%;"></div></div></div>
+            <div class="profile-row"><span class="profile-label">Doçura</span><div class="bar-container"><div id="custom-sweet" class="bar-fill" style="width: 50%;"></div></div></div>
+            <div class="profile-row"><span class="profile-label">Acidez</span><div class="bar-container"><div id="custom-acidity" class="bar-fill" style="width: 50%;"></div></div></div>
+            
+            <div class="result-box">
+                <div class="total-label">Tempo Total Estimado</div>
+                <div class="total-time-display" id="total-time">00:00</div>
+                <div class="total-label" id="total-water-display" style="margin-top:5px;">0ml de Água</div>
+            </div>
+        </div>
+
+        <!-- Inputs Gerais -->
+        <div class="card">
+            <h2><i data-lucide="settings"></i> Configuração Base</h2>
+            <div class="form-row">
+                <div class="form-col">
+                    <label>Café (g)</label>
+                    <input type="number" id="grams" value="20" onchange="calculateCustom()">
+                </div>
+                <div class="form-col">
+                    <label>Moagem</label>
+                    <select id="grind" onchange="calculateCustom()">
+                        <option value="fine">Fina (Sal Refinado)</option>
+                        <option value="medium" selected>Média (Areia)</option>
+                        <option value="coarse">Grossa (Sal Grosso)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <label>Temp. Água (°C)</label>
+                    <input type="number" id="temp" value="93" onchange="calculateCustom()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Despejos -->
+        <div class="card" style="border-left-color: var(--accent);">
+            <h2><i data-lucide="droplet"></i> Despejos (Pours)</h2>
+            <div id="pours-container">
+                <!-- Despejos inseridos via JS -->
+            </div>
+            
+            <button class="btn-add" onclick="addPour()">
+                <i data-lucide="plus-circle"></i> Adicionar Despejo
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<footer>
+    © 2026 Aldemar Araujo Castro
+</footer>
+
+<script>
+    lucide.createIcons();
+
+    let currentMode = 'classic'; // Aba inicial
+    let timerInterval;
+    let elapsedSeconds = 0;
+    let isRunning = false;
+    let audioCtx = null;
+    let currentTimings = [];
+    let totalDurationCalc = 0;
+
+    // Controle de Abas
+    function openRecipe(recipeName) {
+        // Pausa e zera o cronômetro ao mudar de aba
+        resetTimer();
+        currentMode = recipeName;
+
+        document.querySelectorAll('.recipe-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(recipeName).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // ================= LÓGICA DA CALCULADORA PERSONALIZADA =================
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Configuração Inicial da Aba Personalizada
+        addPour(40, 100, 'closed');
+        addPour(50, 100, 'closed');
+        addPour(60, 100, 'open');
+    });
+
+    function addPour(duration = 45, volume = 60, state = 'open') {
+        const id = Date.now() + Math.floor(Math.random() * 1000);
+        const container = document.getElementById('pours-container');
+        const count = container.children.length + 1;
+
+        const div = document.createElement('div');
+        div.className = 'pour-item';
+        div.id = `pour-${id}`;
+        div.setAttribute('data-switch', state); 
+
+        div.innerHTML = `
+            <div class="pour-header">
+                <span class="pour-title">Despejo #${count}</span>
+                <button class="remove-btn" onclick="removePour('${id}')">Remover</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Posição do Switch</label>
+                <div class="switch-toggle" onclick="toggleSwitch('${id}')">
+                    <div class="switch-bg"></div>
+                    <div class="switch-option opt-open">ABERTO</div>
+                    <div class="switch-option opt-closed">FECHADO</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <label>Tempo (seg)</label>
+                    <input type="number" class="pour-time" value="${duration}" oninput="calculateCustom()">
+                </div>
+                <div class="form-col">
+                    <label>Água (ml)</label>
+                    <input type="number" class="pour-water" value="${volume}" oninput="calculateCustom()">
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(div);
+        calculateCustom();
+    }
+
+    function removePour(id) {
+        const el = document.getElementById(`pour-${id}`);
+        if(el) el.remove();
+        renumberPours();
+        calculateCustom();
+    }
+
+    function renumberPours() {
+        const titles = document.querySelectorAll('.pour-title');
+        titles.forEach((t, index) => {
+            t.textContent = `Despejo #${index + 1}`;
+        });
+    }
+
+    function toggleSwitch(id) {
+        const el = document.getElementById(`pour-${id}`);
+        const current = el.getAttribute('data-switch');
+        const newState = current === 'open' ? 'closed' : 'open';
+        el.setAttribute('data-switch', newState);
+        calculateCustom();
+    }
+
+    function calculateCustom() {
+        if(currentMode !== 'custom') return;
+
+        const grind = document.getElementById('grind').value;
+        const temp = parseInt(document.getElementById('temp').value) || 93;
+        const coffeeGrams = parseInt(document.getElementById('grams').value) || 20;
+        
+        let totalTimeSec = 0;
+        let totalWater = 0;
+        let acidity = 50, body = 50, sweetness = 50;
+
+        if (grind === 'fine') { body += 15; acidity += 10; sweetness -= 5; } 
+        else if (grind === 'coarse') { body -= 15; acidity += 5; sweetness += 5; }
+
+        if (temp > 94) { acidity += 10; body += 5; } 
+        else if (temp < 88) { acidity -= 5; sweetness += 10; body -= 5; }
+
+        document.querySelectorAll('.pour-item').forEach(item => {
+            const time = parseInt(item.querySelector('.pour-time').value) || 0;
+            const water = parseInt(item.querySelector('.pour-water').value) || 0;
+            const state = item.getAttribute('data-switch');
+
+            totalTimeSec += time;
+            totalWater += water;
+
+            if (state === 'open') {
+                acidity += (time * 0.15); body -= (time * 0.05);
+            } else {
+                body += (time * 0.2); sweetness += (time * 0.1); acidity -= (time * 0.05);
+            }
+        });
+
+        acidity = Math.min(100, Math.max(10, acidity));
+        body = Math.min(100, Math.max(10, body));
+        sweetness = Math.min(100, Math.max(10, sweetness));
+
+        document.getElementById('custom-body').style.width = `${body}%`;
+        document.getElementById('custom-sweet').style.width = `${sweetness}%`;
+        document.getElementById('custom-acidity').style.width = `${acidity}%`;
+
+        const min = Math.floor(totalTimeSec / 60);
+        const sec = totalTimeSec % 60;
+        document.getElementById('total-time').textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+        document.getElementById('total-water-display').textContent = `Ratio 1:${(totalWater/coffeeGrams).toFixed(1)} (${totalWater}ml)`;
+            
+        if (!isRunning && elapsedSeconds === 0) {
+            prepareTimings();
+        }
+    }
+
+    // ================= LÓGICA DO CRONÔMETRO E ÁUDIO (GLOBAL) =================
+    
+    function initAudio() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playBeep(type) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'next') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'end') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime + 0.5);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.5);
+        }
+    }
+
+    function prepareTimings() {
+        currentTimings = [];
+        let currentTime = 0;
+
+        if (currentMode === 'custom') {
+            const pourItems = document.querySelectorAll('.pour-item');
+            pourItems.forEach((item, index) => {
+                const duration = parseInt(item.querySelector('.pour-time').value) || 0;
+                currentTimings.push({
+                    index: index, element: item, start: currentTime, end: currentTime + duration,
+                    state: item.getAttribute('data-switch'), type: 'custom'
+                });
+                currentTime += duration;
+            });
+        } 
+        else if (currentMode === 'classic') {
+            currentTimings = [
+                { index: 0, element: document.getElementById('classic-step-0'), start: 0, end: 120, type: 'fixed' },
+                { index: 1, element: document.getElementById('classic-step-1'), start: 120, end: 210, type: 'fixed' } // 210s = 3m30s
+            ];
+            currentTime = 210;
+        } 
+        else if (currentMode === 'hybrid') {
+            currentTimings = [
+                { index: 0, element: document.getElementById('hybrid-step-0'), start: 0, end: 30, type: 'fixed' },
+                { index: 1, element: document.getElementById('hybrid-step-1'), start: 30, end: 75, type: 'fixed' }, // 75s = 1m15s
+                { index: 2, element: document.getElementById('hybrid-step-2'), start: 75, end: 180, type: 'fixed' }, // 180s = 3m00s
+                { index: 3, element: document.getElementById('hybrid-step-3'), start: 180, end: 210, type: 'fixed' } // +30s para descer
+            ];
+            currentTime = 210;
+        }
+
+        totalDurationCalc = currentTime;
+    }
+
+    function formatTime(totalSecs) {
+        const min = Math.floor(totalSecs / 60);
+        const sec = totalSecs % 60;
+        return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimerUI() {
+        const timeStr = formatTime(elapsedSeconds);
+        
+        // Atualiza o display correspondente à aba ativa
+        if (currentMode === 'custom') document.getElementById('main-timer').textContent = timeStr;
+        else if (currentMode === 'classic') document.getElementById('classic-timer-display').textContent = timeStr;
+        else if (currentMode === 'hybrid') document.getElementById('hybrid-timer-display').textContent = timeStr;
+        
+        // Verifica Finalização
+        if (elapsedSeconds >= totalDurationCalc && totalDurationCalc > 0) {
+            if (currentMode === 'custom') document.getElementById('timer-status').textContent = "Extração Finalizada!";
+            clearInterval(timerInterval);
+            isRunning = false;
+            
+            // Escurece todos os despejos
+            currentTimings.forEach(p => {
+                p.element.classList.remove('active-pour', 'active-step');
+                p.element.classList.add(p.type === 'custom' ? 'finished-pour' : 'finished-step');
+            });
+            return;
+        }
+
+        // Descobre em qual despejo estamos
+        const activePour = currentTimings.find(p => elapsedSeconds >= p.start && elapsedSeconds < p.end);
+        
+        if (activePour) {
+            const isTransition = (elapsedSeconds === activePour.start && elapsedSeconds > 0);
+            
+            if (isTransition) {
+                playBeep('next'); // Bipe de transição
+            }
+
+            if (currentMode === 'custom') {
+                const remaining = activePour.end - elapsedSeconds;
+                const stateText = activePour.state === 'open' ? 'ABERTO' : 'FECHADO';
+                document.getElementById('timer-status').textContent = 
+                    `Despejo #${activePour.index + 1} (Switch ${stateText}) , restam ${remaining}s`;
+            }
+
+            // Destaque visual
+            currentTimings.forEach(p => {
+                const activeClass = p.type === 'custom' ? 'active-pour' : 'active-step';
+                const finishedClass = p.type === 'custom' ? 'finished-pour' : 'finished-step';
+
+                if (p === activePour) {
+                    p.element.classList.add(activeClass);
+                    p.element.classList.remove(finishedClass);
+                } else if (elapsedSeconds >= p.end) {
+                    p.element.classList.remove(activeClass);
+                    p.element.classList.add(finishedClass);
+                } else {
+                    p.element.classList.remove(activeClass);
+                    p.element.classList.remove(finishedClass);
+                }
+            });
+        }
+    }
+
+    function startTimer() {
+        initAudio(); // Desbloqueia o som
+        if (isRunning) return;
+        
+        if (elapsedSeconds === 0) {
+            prepareTimings();
+            if (totalDurationCalc === 0) return;
+            playBeep('next'); // Bipe inicial de confirmação
+        }
+        
+        isRunning = true;
+        updateTimerUI(); // Atualiza interface imediatamente
+        
+        timerInterval = setInterval(() => {
+            elapsedSeconds++;
+            updateTimerUI();
+            
+            if (elapsedSeconds === totalDurationCalc) {
+                playBeep('end');
+            }
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        if (currentMode === 'custom' && elapsedSeconds > 0 && elapsedSeconds < totalDurationCalc) {
+            document.getElementById('timer-status').textContent = "Pausado";
+        }
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        elapsedSeconds = 0;
+        
+        // Zera todos os displays visuais
+        document.getElementById('main-timer').textContent = "00:00";
+        document.getElementById('classic-timer-display').textContent = "00:00";
+        document.getElementById('hybrid-timer-display').textContent = "00:00";
+        document.getElementById('timer-status').textContent = "Pronto para iniciar";
+        
+        // Limpa classes visuais de todos os itens em todas as abas
+        document.querySelectorAll('.pour-item, .step-item').forEach(item => {
+            item.classList.remove('active-pour', 'finished-pour', 'active-step', 'finished-step');
+        });
+        
+        prepareTimings();
+    }
+
+</script>
+
+</body>
+</html>
