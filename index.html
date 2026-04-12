@@ -373,8 +373,8 @@
         id: 'aeropress',
         name: 'Aeropress',
         champion: 'Versátil e Prático',
-        description: 'A Aeropress utiliza pressão do ar para extrair um café encorpado. O método original traz uma bebida mais limpa, enquanto o método invertido permite maior tempo de infusão para um sabor intenso. A proporção ideal ajustada para este equipamento é de 1 para 12.',
-        ratio: 12, 
+        description: 'A Aeropress utiliza pressão do ar para extrair um café encorpado. Vamos extrair uma base concentrada de 1 para 10 e, após a extração, adicionar água limpa diretamente na xícara (bypass) para atingir a proporção final de 1 para 16. O ajuste recomendado para iniciar é de exatos 16 gramas de café.',
+        ratio: 16, // A proporção total usada matematicamente é 16, mas a extração no pó é 10.
         grind: 'Média para Fina',
         steps: [] // Preenchido dinamicamente
       }
@@ -505,19 +505,26 @@
 
     function generateAeropressSteps() {
       let steps = [];
+      // A matemática: Da água total (proporção 16), vamos usar a proporção 10 para extração (10/16 da água total)
+      // O restante da água (6/16 da água total) será usado para a diluição (bypass) direto na xícara.
+      const extracaoPercent = 10 / 16; 
+      const bypassPercent = 6 / 16;    
+
       if (state.aeropressType === 'original') {
-        steps.push({ time: 0, duration: 15, title: 'Despejo', subtitle: 'Total', action: 'Despeje toda a água sobre o pó e dê uma leve misturada.', percent: 1.0 });
+        steps.push({ time: 0, duration: 15, title: 'Despejo', subtitle: 'Base', action: 'Despeje a água de extração sobre o pó e dê uma leve misturada.', percent: extracaoPercent });
         steps.push({ time: 15, duration: 105, title: 'Infusão', subtitle: 'Aguardar', action: 'Encaixe o êmbolo levemente no topo para criar vácuo e aguarde o tempo agir.', percent: 0 });
         steps.push({ time: 120, duration: 10, title: 'Agitação', subtitle: 'Giro', action: 'Segure firme e dê um giro suave no equipamento (swirl) para o pó assentar.', percent: 0 });
         steps.push({ time: 130, duration: 30, title: 'Assentar', subtitle: 'Espera', action: 'Aguarde os resíduos descerem para o fundo, facilitando a filtragem.', percent: 0 });
         steps.push({ time: 160, duration: 30, title: 'Extração', subtitle: 'Pressionar', action: 'Pressione o êmbolo para baixo lentamente até ouvir um leve chiado de ar.', percent: 0 });
-        steps.push({ time: 190, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'Sua extração terminou, aproveite seu café!', percent: 0 });
+        steps.push({ time: 190, duration: 15, title: 'Diluição', subtitle: 'Bypass', action: 'Remova a Aeropress e adicione a água restante diretamente na xícara.', percent: bypassPercent });
+        steps.push({ time: 205, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'Sua extração terminou, aproveite seu café!', percent: 0 });
       } else {
-        steps.push({ time: 0, duration: 15, title: 'Bloom', subtitle: 'Inicial', action: 'Com a Aeropress invertida, despeje metade da água e mexa bem vigorosamente.', percent: 0.5 });
-        steps.push({ time: 15, duration: 15, title: 'Despejo', subtitle: 'Final', action: 'Complete com o restante da água até quase atingir a borda superior.', percent: 0.5 });
+        steps.push({ time: 0, duration: 15, title: 'Bloom', subtitle: 'Inicial', action: 'Com a Aeropress invertida, despeje metade da água de extração e mexa vigorosamente.', percent: extracaoPercent / 2 });
+        steps.push({ time: 15, duration: 15, title: 'Despejo', subtitle: 'Final', action: 'Complete com o restante da água de extração.', percent: extracaoPercent / 2 });
         steps.push({ time: 30, duration: 60, title: 'Infusão', subtitle: 'Aguardar', action: 'Encaixe o suporte com o filtro escaldado e feche a tampa firmemente.', percent: 0 });
         steps.push({ time: 90, duration: 30, title: 'Extração', subtitle: 'Virar', action: 'Vire a Aeropress sobre a xícara com segurança e pressione o êmbolo lentamente.', percent: 0 });
-        steps.push({ time: 120, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'Sua extração terminou, aproveite seu café!', percent: 0 });
+        steps.push({ time: 120, duration: 15, title: 'Diluição', subtitle: 'Bypass', action: 'Remova a Aeropress e adicione a água restante diretamente na xícara.', percent: bypassPercent });
+        steps.push({ time: 135, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'Sua extração terminou, aproveite seu café!', percent: 0 });
       }
       return steps;
     }
