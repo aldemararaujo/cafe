@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mestre do Café</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Ícones -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f5f5f4;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #d6d3d1;
+      border-radius: 4px;
+    }
+    .animate-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hidden-state {
+      display: none !important;
+    }
+    
+    :root {
+      --alert-bg-start: #fffbeb;
+      --alert-border-start: #fef3c7;
+      --alert-bg-peak: #fef3c7;
+      --alert-border-peak: #d97706;
+      --timer-pulse-color: #b45309;
+    }
+    .dark {
+      --alert-bg-start: rgba(120, 53, 15, 0.2);
+      --alert-border-start: rgba(120, 53, 15, 0.5);
+      --alert-bg-peak: rgba(120, 53, 15, 0.6);
+      --alert-border-peak: #d97706;
+      --timer-pulse-color: #fbbf24;
+    }
+    
+    /* Animação para o Alarme Visual */
+    @keyframes pulseAlert {
+      0%, 100% { 
+        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); 
+        border-color: var(--alert-border-start);
+        background-color: var(--alert-bg-start);
+      }
+      50% { 
+        box-shadow: 0 0 25px 5px rgba(217, 119, 6, 0.4); 
+        border-color: var(--alert-border-peak);
+        background-color: var(--alert-bg-peak);
+      }
+    }
+    .alert-active {
+      animation: pulseAlert 1.5s ease-in-out 2;
+    }
+    .timer-pulse {
+      transform: scale(1.1);
+      color: var(--timer-pulse-color) !important;
+    }
+    
+    /* Ocultar setas do input numérico */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 font-sans flex flex-col min-h-[100dvh] overflow-x-hidden transition-colors duration-300">
+
+  <!-- CABEÇALHO GLOBAL -->
+  <header class="bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 px-4 py-3 flex items-center sticky top-0 z-50 shadow-sm shrink-0 w-full transition-colors duration-300">
+    <button id="header-back-btn" class="text-amber-700 dark:text-amber-500 hover:text-amber-800 dark:hover:text-amber-400 flex items-center gap-1 text-sm font-bold transition-colors hidden-state">
+      <i data-lucide="chevron-left" class="w-6 h-6"></i> Início
+    </button>
+    <div class="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+      <i data-lucide="coffee" class="text-amber-700 dark:text-amber-500 w-5 h-5"></i>
+      <h1 class="font-bold tracking-tight text-stone-800 dark:text-stone-100 whitespace-nowrap">Mestre do Café</h1>
+    </div>
+    <div class="flex items-center gap-2 ml-auto">
+      <button id="theme-toggle-btn" class="p-2 rounded-full transition-colors text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-stone-800 hover:bg-amber-100 dark:hover:bg-stone-700">
+        <i data-lucide="moon" id="icon-moon" class="w-5 h-5"></i>
+        <i data-lucide="sun" id="icon-sun" class="w-5 h-5 hidden-state"></i>
+      </button>
+      <button id="header-sound-btn" class="p-2 rounded-full transition-colors text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-stone-800 hover:bg-amber-100 dark:hover:bg-stone-700">
+        <i data-lucide="volume-2" id="icon-vol-on" class="w-5 h-5"></i>
+        <i data-lucide="volume-x" id="icon-vol-off" class="w-5 h-5 hidden-state"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTAINER PRINCIPAL -->
+  <main id="app-container" class="flex-1 w-full max-w-2xl mx-auto p-4 md:p-6 flex flex-col relative">
+    
+    <!-- TELA DE SETUP -->
+    <div id="setup-screen" class="space-y-6 animate-in flex-1 flex flex-col pb-4">
+      <section class="bg-white dark:bg-stone-900 rounded-3xl p-6 shadow-sm border border-stone-200 dark:border-stone-800 space-y-8 transition-colors duration-300">
+        
+        <!-- Passo 1: Proporções -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-amber-700 text-white text-sm font-bold shrink-0 shadow-md">1</span>
+            <h2 class="text-lg font-bold text-stone-800 dark:text-stone-100 tracking-tight">Defina as Proporções</h2>
+          </div>
+          
+          <!-- Controles de Proporção (Subcard) -->
+          <div class="bg-stone-50 dark:bg-stone-800/30 p-4 rounded-2xl border border-stone-100 dark:border-stone-700/80 space-y-4">
+            <!-- Slider de Peso -->
+            <div class="space-y-3">
+              <label class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400">
+                <i data-lucide="scale" class="w-4 h-4"></i> QUANTO CAFÉ VOCÊ VAI USAR?
+              </label>
+              <div class="flex items-center gap-3">
+                <input 
+                  type="range" 
+                  id="coffee-weight"
+                  min="5" 
+                  max="60" 
+                  value="20" 
+                  class="flex-1 h-2 bg-stone-200 dark:bg-stone-700 rounded-lg appearance-none cursor-pointer accent-amber-700 dark:accent-amber-500"
+                />
+                <div class="flex items-baseline justify-end w-20 bg-white dark:bg-stone-800 rounded-lg px-2 py-1 border border-stone-200 dark:border-stone-700 focus-within:ring-2 focus-within:ring-amber-500 transition-all">
+                  <input 
+                    type="number" 
+                    id="coffee-weight-number"
+                    min="1" 
+                    max="999" 
+                    value="20" 
+                    class="w-full text-2xl font-bold text-amber-900 dark:text-amber-400 bg-transparent outline-none text-right appearance-none"
+                  />
+                  <span class="text-lg font-bold text-amber-900 dark:text-amber-400 ml-0.5">g</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slider de Volume (Bebida Pronta) -->
+            <div class="space-y-3 pt-4 border-t border-stone-200 dark:border-stone-700/50">
+              <label class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400">
+                <i data-lucide="coffee" class="w-4 h-4"></i> QUAL O VOLUME DA BEBIDA (CAFÉ PRONTO) QUE VOCÊ DESEJA?
+              </label>
+              <div class="flex items-center gap-3">
+                <input 
+                  type="range" 
+                  id="coffee-yield"
+                  min="50" 
+                  max="1000" 
+                  value="260" 
+                  class="flex-1 h-2 bg-stone-200 dark:bg-stone-700 rounded-lg appearance-none cursor-pointer accent-amber-700 dark:accent-amber-500"
+                />
+                <div class="flex items-baseline justify-end w-24 bg-white dark:bg-stone-800 rounded-lg px-2 py-1 border border-stone-200 dark:border-stone-700 focus-within:ring-2 focus-within:ring-amber-500 transition-all">
+                  <input 
+                    type="number" 
+                    id="coffee-yield-number"
+                    min="10" 
+                    max="2000" 
+                    value="260" 
+                    class="w-full text-2xl font-bold text-amber-900 dark:text-amber-400 bg-transparent outline-none text-right appearance-none"
+                  />
+                  <span class="text-lg font-bold text-amber-900 dark:text-amber-400 ml-0.5">ml</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Passo 2: Método -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-amber-700 text-white text-sm font-bold shrink-0 shadow-md">2</span>
+            <h2 class="text-lg font-bold text-stone-800 dark:text-stone-100 tracking-tight">Escolha o Método</h2>
+          </div>
+          <div id="methods-container" class="grid gap-3">
+            <!-- Os cards dos métodos serão injetados aqui via JS -->
+          </div>
+        </div>
+
+        <!-- Passo 3: Mise en place -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-amber-700 text-white text-sm font-bold shrink-0 shadow-md">3</span>
+            <h2 class="text-lg font-bold text-stone-800 dark:text-stone-100 tracking-tight">Mise en Place (Preparação)</h2>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            
+            <div class="flex items-start gap-3 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-100 dark:border-stone-700">
+              <i data-lucide="scale" class="w-5 h-5 text-stone-400 dark:text-stone-500 mt-0.5"></i>
+              <div>
+                <p class="text-sm font-bold text-stone-700 dark:text-stone-300">Balança</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400 leading-snug">Zerada (tara) com o equipamento em cima.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-100 dark:border-stone-700">
+              <i data-lucide="coffee" class="w-5 h-5 text-stone-400 dark:text-stone-500 mt-0.5"></i>
+              <div>
+                <p class="text-sm font-bold text-stone-700 dark:text-stone-300">Café</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400 leading-snug"><span id="mise-coffee-weight" class="font-bold text-stone-600 dark:text-stone-300"></span>, moagem <span id="mise-grind" class="font-bold text-stone-600 dark:text-stone-300"></span>.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-100 dark:border-stone-700">
+              <i data-lucide="droplets" class="w-5 h-5 text-stone-400 dark:text-stone-500 mt-0.5"></i>
+              <div>
+                <p class="text-sm font-bold text-stone-700 dark:text-stone-300">Água Total</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400 leading-snug"><span id="mise-water-volume" class="font-bold text-stone-600 dark:text-stone-300"></span>, aquecida entre 92ºC e 96ºC.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-100 dark:border-stone-700">
+              <i data-lucide="filter" class="w-5 h-5 text-stone-400 dark:text-stone-500 mt-0.5"></i>
+              <div>
+                <p class="text-sm font-bold text-stone-700 dark:text-stone-300">Filtro</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400 leading-snug">Escaldado com a água descartada logo a seguir.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <button id="start-btn" class="w-full bg-amber-700 hover:bg-amber-800 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-amber-200 dark:shadow-none transition-all transform active:scale-95 flex items-center justify-center gap-2 mt-2">
+          COMEÇAR EXTRAÇÃO <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+        </button>
+      </section>
+
+      <!-- Rodapé Dicas -->
+      <div class="grid grid-cols-2 gap-4 mt-auto pt-4">
+        <div class="bg-white dark:bg-stone-900 p-4 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-800 transition-colors duration-300 flex gap-3 items-start">
+          <i data-lucide="info" class="text-stone-400 dark:text-stone-500 shrink-0 w-5 h-5"></i>
+          <div class="space-y-1">
+            <h4 class="text-sm font-bold text-stone-700 dark:text-stone-200">Princípios</h4>
+            <p id="method-description" class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed"></p>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-stone-900 p-4 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-800 transition-colors duration-300 flex flex-col justify-center">
+          <h4 class="text-xs font-bold text-stone-400 uppercase mb-1">Dica de Ouro</h4>
+          <p class="text-xs text-stone-600 dark:text-stone-400 leading-tight">Despeje a água sempre no pó, evite despejar diretamente no papel do filtro.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA DE PREPARO (CRONÔMETRO) -->
+    <div id="brew-screen" class="hidden-state flex flex-col flex-1 w-full animate-in pb-4">
+      <div id="brew-main-card" class="bg-white dark:bg-stone-900 rounded-3xl p-4 md:p-6 shadow-xl dark:shadow-none border border-stone-200 dark:border-stone-800 flex flex-col flex-1 overflow-hidden relative transition-colors duration-300">
+        
+        <!-- Progresso Visual Superior -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-stone-100 dark:bg-stone-800">
+          <div id="progress-bar" class="h-full bg-amber-600 transition-all duration-1000" style="width: 0%"></div>
+        </div>
+
+        <div class="flex justify-center pt-3 pb-1 shrink-0">
+          <span id="brew-method-name" class="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest text-center px-2 bg-stone-50 dark:bg-stone-800 py-1 rounded-full border border-stone-100 dark:border-stone-700"></span>
+        </div>
+
+        <!-- Linha do Tempo Horizontal -->
+        <div class="w-full overflow-x-auto py-2 shrink-0 custom-scrollbar">
+          <div id="timeline-container" class="flex gap-3 min-w-max pt-2 pl-2 pb-1 pr-2">
+            <!-- Passos injetados via JS -->
+          </div>
+        </div>
+
+        <!-- Passo Atual em Destaque -->
+        <div id="active-step-card" class="shrink-0 rounded-2xl p-5 border flex flex-col justify-center text-center relative shadow-sm transition-all duration-300 mb-2 mt-2 bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/50">
+          <span id="active-step-title" class="text-xs font-bold uppercase tracking-widest block mb-2 text-amber-700 dark:text-amber-500 transition-colors duration-300"></span>
+          <p id="active-step-action" class="text-stone-800 dark:text-stone-200 font-medium text-lg leading-snug mb-4">
+            Inicie o cronômetro para ver as instruções de preparo.
+          </p>
+          <div id="active-step-badges" class="flex flex-wrap items-center justify-center gap-3 hidden-state">
+            <div id="badge-water" class="flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-bold shadow-sm border border-blue-100 dark:border-blue-800">
+              <i data-lucide="droplets" class="w-3.5 h-3.5"></i> <span id="water-amount"></span>
+            </div>
+            <div id="badge-time" class="flex items-center gap-1.5 px-3 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-300 rounded-full text-sm font-bold shadow-sm border border-amber-200 dark:border-amber-800">
+              <i data-lucide="clock" class="w-3.5 h-3.5"></i> <span id="time-amount"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cronômetro Gigante e Controles -->
+        <div class="flex-1 flex flex-col items-center justify-center min-h-[180px]">
+          <div id="timer-display" class="text-[5rem] md:text-8xl font-mono font-black tracking-tighter tabular-nums drop-shadow-sm leading-none transition-all duration-300 text-stone-800 dark:text-stone-100">
+            0:00
+          </div>
+
+          <div class="flex gap-4 pt-6 shrink-0">
+            <button id="play-pause-btn" class="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all transform active:scale-90 bg-amber-700 text-white dark:bg-amber-600">
+              <i data-lucide="play" id="icon-play" class="w-8 h-8 fill-current ml-1"></i>
+              <i data-lucide="pause" id="icon-pause" class="w-8 h-8 hidden-state"></i>
+            </button>
+            <button id="reset-btn" class="w-16 h-16 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 flex items-center justify-center hover:bg-stone-200 dark:hover:bg-stone-700 transition-all">
+              <i data-lucide="rotate-ccw" class="w-7 h-7"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- RODAPÉ GLOBAL -->
+  <footer class="bg-stone-100 dark:bg-stone-900 border-t border-stone-200 dark:border-stone-800 p-4 text-center text-xs text-stone-500 dark:text-stone-400 shrink-0 w-full mt-auto transition-colors duration-300">
+    Copyright @ 2026 Aldemar Araujo Castro
+  </footer>
+
+  <script>
+    const METHODS = [
+      {
+        id: 'tetsu-46',
+        name: 'Tetsu Kasuya (Método 4:6)',
+        champion: 'World Brewers Cup Champion 2016',
+        description: 'O Método 4:6 divide a água em duas partes e utiliza a proporção de 1 para 15 (1g de café para 15ml de água). Os primeiros 40% controlam o equilíbrio entre doçura e acidez, enquanto os 60% restantes definem a força do café. Tudo isso usando uma moagem mais grossa para uma extração limpa.',
+        ratio: 15, 
+        grind: 'Grossa (tipo sal marinho)',
+        steps: [] // Preenchido dinamicamente para respeitar o ajuste de sabor e força
+      },
+      {
+        id: 'hoffmann-v60',
+        name: 'James Hoffmann V60',
+        champion: 'World Barista Champion 2007',
+        description: 'Esta técnica foca na extração máxima e uniforme, usando a proporção precisa de 60g de café para 1 litro de água (1 para 16,6). Utiliza água muito quente e uma moagem média mais fina. O giro vigoroso (swirl) durante o bloom garante que todo o pó seja molhado adequadamente.',
+        ratio: 16.6,
+        grind: 'Média para Fina',
+        steps: [
+          { time: 0, duration: 15, title: 'Bloom', subtitle: 'Floração', action: 'Despeje a água do bloom e dê um giro vigoroso no suporte (swirl) para saturar todo o pó.', percent: 0.12 },
+          { time: 45, duration: 30, title: '1ª Fase', subtitle: 'Rápida', action: 'Despeje até atingir 60% do peso total da água de forma rápida e constante.', percent: 0.48 },
+          { time: 75, duration: 30, title: '2ª Fase', subtitle: 'Suave', action: 'Despeje o restante da água suavemente, com foco no controle do fluxo.', percent: 0.40 },
+          { time: 105, duration: 10, title: 'Agitação', subtitle: 'Final', action: 'Mexa levemente com a colher e dê um giro final para nivelar a cama de café.', percent: 0 },
+          { time: 210, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'A extração terminou, aproveite seu café!', percent: 0 },
+        ]
+      },
+      {
+        id: 'standard-pour',
+        name: 'Proporção Áurea (Padrão)',
+        champion: 'SCA Standard',
+        description: 'A proporção de 1 para 16 (1g de café para 16ml de água) é o padrão de ouro da Associação de Cafés Especiais para uma xícara perfeitamente equilibrada. Para manter a temperatura estável e a agitação constante, dividimos a extração em três etapas exatas.',
+        ratio: 16,
+        grind: 'Média (tipo areia fina)',
+        steps: [
+          { time: 0, duration: 10, title: 'Bloom', subtitle: 'Umedecer', action: 'Despeje 20% da água em movimentos circulares para liberar os gases.', percent: 0.20 },
+          { time: 45, duration: 30, title: '1º Despejo', subtitle: 'Corpo', action: 'Despeje mais 40% da água de forma lenta e constante.', percent: 0.40 },
+          { time: 75, duration: 30, title: '2º Despejo', subtitle: 'Finalização', action: 'Despeje os últimos 40% da água, mantendo o nível alto no filtro.', percent: 0.40 },
+          { time: 105, duration: 0, title: 'Drenagem', subtitle: 'Aguardar', action: 'Aguarde a água descer completamente pelo filtro de papel.', percent: 0 },
+          { time: 150, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'A extração terminou, aproveite seu café!', percent: 0 },
+        ]
+      },
+      {
+        id: 'aeropress',
+        name: 'Aeropress',
+        champion: 'Versátil e Prático',
+        description: 'A Aeropress utiliza pressão do ar para extrair um café encorpado. O método original traz uma bebida mais limpa, enquanto o método invertido permite maior tempo de infusão para um sabor intenso. A proporção ideal ajustada para este equipamento é de 1 para 12.',
+        ratio: 12, 
+        grind: 'Média para Fina',
+        steps: [] // Preenchido dinamicamente
+      }
+    ];
+
+    // Estado da aplicação
+    let state = {
+      coffeeWeight: 20,
+      coffeeYield: 260, 
+      waterVolume: 300, 
+      selectedMethod: METHODS[0],
+      currentSteps: [],
+      tetsuFlavor: 'balanced',
+      tetsuStrength: 'normal',
+      aeropressType: 'original',
+      timerActive: false,
+      seconds: 0,
+      isBrewing: false,
+      soundEnabled: true,
+      lastBeepSecond: -1,
+      timerInterval: null
+    };
+
+    // Referências DOM
+    const DOM = {
+      setupScreen: document.getElementById('setup-screen'),
+      brewScreen: document.getElementById('brew-screen'),
+      brewMainCard: document.getElementById('brew-main-card'),
+      coffeeWeightInput: document.getElementById('coffee-weight'),
+      coffeeWeightNumber: document.getElementById('coffee-weight-number'),
+      coffeeYieldInput: document.getElementById('coffee-yield'),
+      coffeeYieldNumber: document.getElementById('coffee-yield-number'),
+      methodsContainer: document.getElementById('methods-container'),
+      methodDescription: document.getElementById('method-description'),
+      
+      miseCoffeeWeight: document.getElementById('mise-coffee-weight'),
+      miseGrind: document.getElementById('mise-grind'),
+      miseWaterVolume: document.getElementById('mise-water-volume'),
+
+      startBtn: document.getElementById('start-btn'),
+      headerBackBtn: document.getElementById('header-back-btn'),
+      headerSoundBtn: document.getElementById('header-sound-btn'),
+      themeToggleBtn: document.getElementById('theme-toggle-btn'),
+      iconVolOn: document.getElementById('icon-vol-on'),
+      iconVolOff: document.getElementById('icon-vol-off'),
+      iconSun: document.getElementById('icon-sun'),
+      iconMoon: document.getElementById('icon-moon'),
+      playPauseBtn: document.getElementById('play-pause-btn'),
+      iconPlay: document.getElementById('icon-play'),
+      iconPause: document.getElementById('icon-pause'),
+      resetBtn: document.getElementById('reset-btn'),
+      timerDisplay: document.getElementById('timer-display'),
+      progressBar: document.getElementById('progress-bar'),
+      brewMethodName: document.getElementById('brew-method-name'),
+      timelineContainer: document.getElementById('timeline-container'),
+      activeStepCard: document.getElementById('active-step-card'),
+      activeStepTitle: document.getElementById('active-step-title'),
+      activeStepAction: document.getElementById('active-step-action'),
+      activeStepBadges: document.getElementById('active-step-badges'),
+      waterAmount: document.getElementById('water-amount'),
+      timeAmount: document.getElementById('time-amount')
+    };
+
+    let audioCtx = null;
+
+    function formatTime(s) {
+      const mins = Math.floor(s / 60);
+      const secs = s % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Fator de retenção: Em média 1g de café retém 2ml de água.
+    const RETENTION_FACTOR = 2;
+
+    // Atualiza baseando-se no pó de café
+    function syncFromCoffee() {
+      state.waterVolume = Math.round(state.coffeeWeight * state.selectedMethod.ratio);
+      state.coffeeYield = Math.round(state.waterVolume - (state.coffeeWeight * RETENTION_FACTOR));
+    }
+
+    // Atualiza baseando-se no desejo de bebida pronta
+    function syncFromYield() {
+      state.coffeeWeight = Math.round(state.coffeeYield / (state.selectedMethod.ratio - RETENTION_FACTOR));
+      state.waterVolume = Math.round(state.coffeeWeight * state.selectedMethod.ratio);
+    }
+
+    function generateTetsuSteps() {
+      let steps = [];
+      let currentTime = 0;
+      const interval = 45;
+
+      // Porcentagens exatas baseadas nas teorias aprofundadas do Tetsu Kasuya
+      let p1, p2;
+      if (state.tetsuFlavor === 'sweet') { 
+        p1 = 0.166; 
+        p2 = 0.234; 
+      } else if (state.tetsuFlavor === 'acidic') { 
+        p1 = 0.234; 
+        p2 = 0.166; 
+      } else { 
+        p1 = 0.20;  
+        p2 = 0.20; 
+      }
+
+      steps.push({ time: currentTime, duration: 10, title: '1º Despejo', subtitle: state.tetsuFlavor === 'sweet' ? 'Doçura' : (state.tetsuFlavor === 'acidic' ? 'Acidez' : 'Equilíbrio'), action: 'Despeje a água em movimentos circulares para umedecer e preparar a extração.', percent: p1 });
+      currentTime += interval;
+      
+      steps.push({ time: currentTime, duration: 10, title: '2º Despejo', subtitle: 'Sabor', action: 'Despeje a água de forma contínua para extrair as notas de sabor principais.', percent: p2 });
+      currentTime += interval;
+
+      // Calculando Força (60% da água)
+      let strengthPours;
+      if (state.tetsuStrength === 'light') strengthPours = 2;
+      else if (state.tetsuStrength === 'strong') strengthPours = 4;
+      else strengthPours = 3;
+
+      let strengthPercent = 0.60 / strengthPours;
+
+      for (let i = 0; i < strengthPours; i++) {
+        steps.push({ time: currentTime, duration: 15, title: `${i + 3}º Despejo`, subtitle: 'Força', action: 'Despeje a água suavemente no centro para controlar a força (corpo) da bebida.', percent: strengthPercent });
+        currentTime += interval;
+      }
+
+      steps.push({ time: currentTime, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'Sua extração terminou, aproveite seu café!', percent: 0 });
+
+      return steps;
+    }
+
+    function generateAeropressSteps() {
+      let steps = [];
+      if (state.aeropressType === 'original') {
+        steps.push({ time: 0, duration: 15, title: 'Despejo', subtitle: 'Total', action: 'Despeje toda a água sobre o pó e dê uma leve misturada.', percent: 1.0 });
+        steps.push({ time: 15, duration: 105, title: 'Infusão', subtitle: 'Aguardar', action: 'Encaixe o êmbolo levemente no topo para criar vácuo e aguarde o tempo agir.', percent: 0 });
+        steps.push({ time: 120, duration: 10, title: 'Agitação', subtitle: 'Giro', action: 'Segure firme e dê um giro suave no equipamento (swirl) para o pó assentar.', percent: 0 });
+        steps.push({ time: 130, duration: 30, title: 'Assentar', subtitle: 'Espera', action: 'Aguarde os resíduos descerem para o fundo, facilitando a filtragem.', percent: 0 });
+        steps.push({ time: 160, duration: 30, title: 'Extração', subtitle: 'Pressionar', action: 'Pressione o êmbolo para baixo lentamente até ouvir um leve chiado de ar.', percent: 0 });
+        steps.push({ time: 190, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'Sua extração terminou, aproveite seu café!', percent: 0 });
+      } else {
+        steps.push({ time: 0, duration: 15, title: 'Bloom', subtitle: 'Inicial', action: 'Com a Aeropress invertida, despeje metade da água e mexa bem vigorosamente.', percent: 0.5 });
+        steps.push({ time: 15, duration: 15, title: 'Despejo', subtitle: 'Final', action: 'Complete com o restante da água até quase atingir a borda superior.', percent: 0.5 });
+        steps.push({ time: 30, duration: 60, title: 'Infusão', subtitle: 'Aguardar', action: 'Encaixe o suporte com o filtro escaldado e feche a tampa firmemente.', percent: 0 });
+        steps.push({ time: 90, duration: 30, title: 'Extração', subtitle: 'Virar', action: 'Vire a Aeropress sobre a xícara com segurança e pressione o êmbolo lentamente.', percent: 0 });
+        steps.push({ time: 120, duration: 0, title: 'Pronto', subtitle: 'Fim', action: 'Sua extração terminou, aproveite seu café!', percent: 0 });
+      }
+      return steps;
+    }
+
+    function getActiveStep() {
+      const stepsReversed = [...state.currentSteps].reverse();
+      return stepsReversed.find(step => state.seconds >= step.time) || null;
+    }
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playBeep() {
+      if (!state.soundEnabled) return;
+      try {
+        initAudio();
+        const playTone = (startTime) => {
+          const osc = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          osc.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, startTime);
+          osc.frequency.exponentialRampToValueAtTime(440, startTime + 0.3);
+          gainNode.gain.setValueAtTime(0.5, startTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+          osc.start(startTime);
+          osc.stop(startTime + 0.3);
+        };
+        playTone(audioCtx.currentTime);
+        playTone(audioCtx.currentTime + 0.4);
+      } catch (e) { console.log("Áudio não suportado", e); }
+    }
+
+    function playEndTone() {
+      if (!state.soundEnabled) return;
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime + 2.5);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 3.1);
+      } catch (e) { console.log("Áudio não suportado", e); }
+    }
+
+    function triggerVisualAlert() {
+      DOM.activeStepCard.classList.add('alert-active');
+      DOM.timerDisplay.classList.add('timer-pulse');
+      
+      setTimeout(() => {
+        DOM.activeStepCard.classList.remove('alert-active');
+        DOM.timerDisplay.classList.remove('timer-pulse');
+      }, 3000);
+    }
+
+    function renderSetup() {
+      DOM.coffeeWeightInput.value = state.coffeeWeight;
+      if (document.activeElement !== DOM.coffeeWeightNumber) {
+        DOM.coffeeWeightNumber.value = state.coffeeWeight;
+      }
+      
+      DOM.coffeeYieldInput.value = state.coffeeYield;
+      if (document.activeElement !== DOM.coffeeYieldNumber) {
+        DOM.coffeeYieldNumber.value = state.coffeeYield;
+      }
+
+      DOM.methodDescription.textContent = state.selectedMethod.description;
+
+      if(DOM.miseCoffeeWeight) DOM.miseCoffeeWeight.textContent = `${state.coffeeWeight}g`;
+      if(DOM.miseGrind) DOM.miseGrind.textContent = state.selectedMethod.grind.toLowerCase();
+      if(DOM.miseWaterVolume) DOM.miseWaterVolume.textContent = `${state.waterVolume}ml`;
+
+      DOM.methodsContainer.innerHTML = '';
+      METHODS.forEach(method => {
+        const isSelected = state.selectedMethod.id === method.id;
+        
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border-2 transition-all w-full relative overflow-visible ${isSelected ? 'border-amber-700 bg-amber-50 dark:bg-amber-900/30 dark:border-amber-600 shadow-inner' : 'border-stone-100 bg-stone-50 hover:border-stone-200 dark:border-stone-800 dark:bg-stone-800/50 dark:hover:border-stone-700'}`;
+        
+        let cardHTML = `
+          <div class="flex justify-between items-start cursor-pointer method-selector" data-id="${method.id}">
+            <div>
+              <h3 class="font-bold text-stone-800 dark:text-stone-100 pointer-events-none">${method.name}</h3>
+              <p class="text-xs text-amber-700 dark:text-amber-500 font-medium pointer-events-none">${method.champion}</p>
+            </div>
+            ${isSelected ? '<i data-lucide="check-circle-2" class="text-amber-700 dark:text-amber-500 w-5 h-5 pointer-events-none"></i>' : ''}
+          </div>
+        `;
+
+        if (isSelected && method.id === 'tetsu-46') {
+          cardHTML += `
+            <div class="mt-4 pt-4 border-t border-amber-200/60 dark:border-amber-800/50 space-y-5 animate-in">
+              <div class="space-y-2">
+                <div class="flex items-center gap-1.5">
+                  <label class="text-xs font-bold text-amber-900 dark:text-amber-400 uppercase tracking-widest">Sabor (Primeiros 40%)</label>
+                  <div class="group relative flex items-center justify-center">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 dark:text-amber-500 cursor-help"></i>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block group-active:block w-48 p-2.5 bg-stone-800 dark:bg-stone-200 text-stone-100 dark:text-stone-900 text-xs rounded-xl shadow-xl z-10 text-center font-normal tracking-normal normal-case pointer-events-none">
+                      Ajuste a proporção dos dois primeiros despejos, pois colocar mais água logo no início vai destacar e realçar a doçura natural.
+                      <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-800 dark:border-t-stone-200"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button data-type="flavor" data-value="sweet" class="${state.tetsuFlavor === 'sweet' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 dark:border-amber-500 bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-all text-center cursor-pointer'}">Mais Doce</button>
+                  <button data-type="flavor" data-value="balanced" class="${state.tetsuFlavor === 'balanced' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 dark:border-amber-500 bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-all text-center cursor-pointer'}">Equilíbrio</button>
+                  <button data-type="flavor" data-value="acidic" class="${state.tetsuFlavor === 'acidic' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 dark:border-amber-500 bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-all text-center cursor-pointer'}">Mais Ácido</button>
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <div class="flex items-center gap-1.5">
+                  <label class="text-xs font-bold text-amber-900 dark:text-amber-400 uppercase tracking-widest">Força (Últimos 60%)</label>
+                  <div class="group relative flex items-center justify-center">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 dark:text-amber-500 cursor-help"></i>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block group-active:block w-48 p-2.5 bg-stone-800 dark:bg-stone-200 text-stone-100 dark:text-stone-900 text-xs rounded-xl shadow-xl z-10 text-center font-normal tracking-normal normal-case pointer-events-none">
+                      O número de despejos na segunda fase altera o corpo do café, o que significa que mais despejos criam uma bebida mais intensa.
+                      <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-800 dark:border-t-stone-200"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button data-type="strength" data-value="light" class="${state.tetsuStrength === 'light' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 dark:border-amber-500 bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-all text-center cursor-pointer'}">Mais Leve</button>
+                  <button data-type="strength" data-value="normal" class="${state.tetsuStrength === 'normal' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 dark:border-amber-500 bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-all text-center cursor-pointer'}">Normal</button>
+                  <button data-type="strength" data-value="strong" class="${state.tetsuStrength === 'strong' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 dark:border-amber-500 bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-all text-center cursor-pointer'}">Mais Forte</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        if (isSelected && method.id === 'aeropress') {
+          cardHTML += `
+            <div class="mt-4 pt-4 border-t border-amber-200/60 dark:border-amber-800/50 space-y-4 animate-in">
+              <div class="space-y-2">
+                <div class="flex items-center gap-1.5">
+                  <label class="text-xs font-bold text-amber-900 dark:text-amber-400 uppercase tracking-widest">Estilo de Preparo</label>
+                  <div class="group relative flex items-center justify-center">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 dark:text-amber-500 cursor-help"></i>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block group-active:block w-56 p-2.5 bg-stone-800 dark:bg-stone-200 text-stone-100 dark:text-stone-900 text-xs rounded-xl shadow-xl z-10 text-center font-normal tracking-normal normal-case pointer-events-none">
+                      O método Original produz uma bebida mais limpa, enquanto o método Invertido segura toda a água com o pó para uma infusão bem intensa.
+                      <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-800 dark:border-t-stone-200"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button data-type="aeropress" data-value="original" class="${state.aeropressType === 'original' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 dark:border-amber-500 bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-all text-center cursor-pointer'}">Original</button>
+                  <button data-type="aeropress" data-value="inverted" class="${state.aeropressType === 'inverted' ? 'py-2 px-1 text-xs font-bold rounded-xl border-2 border-amber-600 dark:border-amber-500 bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 transition-all text-center' : 'py-2 px-1 text-xs font-bold rounded-xl border border-amber-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-all text-center cursor-pointer'}">Invertida</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        card.innerHTML = cardHTML;
+        DOM.methodsContainer.appendChild(card);
+      });
+
+      const methodSelectors = DOM.methodsContainer.querySelectorAll('.method-selector');
+      methodSelectors.forEach(selector => {
+        selector.addEventListener('click', () => {
+          const id = selector.getAttribute('data-id');
+          const isChangingToAeropress = id === 'aeropress' && state.selectedMethod.id !== 'aeropress';
+          
+          state.selectedMethod = METHODS.find(m => m.id === id);
+          
+          if (isChangingToAeropress) {
+            state.coffeeWeight = 16; 
+          }
+          
+          syncFromCoffee();
+          renderSetup();
+        });
+      });
+
+      const customBtns = DOM.methodsContainer.querySelectorAll('button[data-type]');
+      customBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const type = btn.getAttribute('data-type');
+          const value = btn.getAttribute('data-value');
+          if (type === 'flavor') state.tetsuFlavor = value;
+          if (type === 'strength') state.tetsuStrength = value;
+          if (type === 'aeropress') state.aeropressType = value;
+          
+          e.stopPropagation();
+          renderSetup();
+        });
+      });
+
+      lucide.createIcons();
+    }
+
+    function renderTimeline() {
+      DOM.timelineContainer.innerHTML = '';
+      const activeStep = getActiveStep();
+      
+      state.currentSteps.forEach((step, idx) => {
+        const isCompleted = activeStep && activeStep.time > step.time;
+        const isCurrent = activeStep?.time === step.time;
+
+        const el = document.createElement('div');
+        el.className = `relative flex flex-col items-center justify-center p-2 rounded-xl border w-[110px] shrink-0 transition-all ${
+          isCurrent ? 'bg-amber-600 dark:bg-amber-700 border-amber-700 dark:border-amber-600 shadow-md transform scale-[1.02]' 
+          : isCompleted ? 'bg-stone-50 dark:bg-stone-800/50 border-stone-200 dark:border-stone-800 opacity-60' 
+          : 'bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700'
+        }`;
+
+        let volumeHtml = '';
+        if (step.percent > 0) {
+          const ml = Math.round(state.waterVolume * step.percent);
+          volumeHtml = `<span class="text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full ${isCurrent ? 'bg-amber-700 dark:bg-amber-900 text-amber-50 dark:text-amber-200' : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400'}">${ml}ml</span>`;
+        }
+
+        const badgeClasses = isCurrent 
+          ? 'bg-amber-500 text-white border-amber-200 dark:border-amber-900' 
+          : isCompleted 
+            ? 'bg-stone-200 text-stone-400 border-white dark:bg-stone-700 dark:text-stone-500 dark:border-stone-800' 
+            : 'bg-stone-200 text-stone-500 border-white dark:bg-stone-700 dark:text-stone-400 dark:border-stone-800';
+
+        const numberBadge = `<div class="absolute -top-2 -left-2 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center border-2 ${badgeClasses} z-10">${idx + 1}</div>`;
+
+        el.innerHTML = `
+          ${numberBadge}
+          <span class="text-xs font-mono font-bold ${isCurrent ? 'text-amber-100' : 'text-stone-400 dark:text-stone-500'}">${formatTime(step.time)}</span>
+          <span class="text-[11px] text-center leading-tight mt-1 font-bold ${isCurrent ? 'text-white' : 'text-stone-700 dark:text-stone-300'}">${step.title}</span>
+          <span class="text-[10px] text-center leading-tight mt-0.5 font-medium ${isCurrent ? 'text-amber-200' : 'text-stone-500 dark:text-stone-400'}">${step.subtitle}</span>
+          ${volumeHtml}
+        `;
+        DOM.timelineContainer.appendChild(el);
+        
+        if (isCurrent) {
+          setTimeout(() => {
+             el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }, 100);
+        }
+      });
+    }
+
+    function renderBrewScreen() {
+      DOM.timerDisplay.textContent = formatTime(state.seconds);
+      
+      const totalStepsTime = state.currentSteps[state.currentSteps.length - 1].time;
+      const progress = Math.min((state.seconds / totalStepsTime) * 100, 100);
+      DOM.progressBar.style.width = `${progress}%`;
+
+      const activeStep = getActiveStep();
+      
+      if (activeStep) {
+        const stepIndex = state.currentSteps.findIndex(s => s.time === activeStep.time);
+        const stepNum = stepIndex + 1;
+        const totalSteps = state.currentSteps.length;
+        
+        const titleText = activeStep.title + (activeStep.subtitle ? ', ' + activeStep.subtitle : '');
+        
+        DOM.activeStepTitle.innerHTML = `
+          <span class="block opacity-70 mb-1 text-[10px] tracking-[0.2em]">PASSO ${stepNum} DE ${totalSteps}</span>
+          <span class="block text-sm sm:text-base tracking-widest">${titleText}</span>
+        `;
+        
+        DOM.activeStepAction.textContent = activeStep.action;
+        
+        if (activeStep.percent > 0 || activeStep.duration > 0) {
+          DOM.activeStepBadges.classList.remove('hidden-state');
+          
+          if (activeStep.percent > 0) {
+            document.getElementById('badge-water').classList.remove('hidden-state');
+            DOM.waterAmount.textContent = `${Math.round(state.waterVolume * activeStep.percent)}ml`;
+          } else {
+            document.getElementById('badge-water').classList.add('hidden-state');
+          }
+
+          if (activeStep.duration > 0) {
+            document.getElementById('badge-time').classList.remove('hidden-state');
+            DOM.timeAmount.textContent = `Ação em ${activeStep.duration}s`;
+          } else {
+            document.getElementById('badge-time').classList.add('hidden-state');
+          }
+        } else {
+          DOM.activeStepBadges.classList.add('hidden-state');
+        }
+      } else {
+        DOM.activeStepTitle.innerHTML = '';
+        DOM.activeStepAction.textContent = 'Inicie o cronômetro para ver as instruções de preparo.';
+        DOM.activeStepBadges.classList.add('hidden-state');
+      }
+
+      if (state.timerActive) {
+        DOM.playPauseBtn.className = 'w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all transform active:scale-90 bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-400';
+        DOM.iconPlay.classList.add('hidden-state');
+        DOM.iconPause.classList.remove('hidden-state');
+      } else {
+        DOM.playPauseBtn.className = 'w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all transform active:scale-90 bg-amber-700 text-white dark:bg-amber-600';
+        DOM.iconPlay.classList.remove('hidden-state');
+        DOM.iconPause.classList.add('hidden-state');
+      }
+
+      renderTimeline();
+    }
+
+    function tick() {
+      state.seconds++;
+      
+      const currentStep = state.currentSteps.find(step => step.time === state.seconds);
+      if (currentStep && state.lastBeepSecond !== state.seconds) {
+        state.lastBeepSecond = state.seconds;
+        triggerVisualAlert();
+        
+        const isLast = state.currentSteps.indexOf(currentStep) === state.currentSteps.length - 1;
+        if (isLast) {
+          playEndTone();
+        } else {
+          playBeep();
+        }
+      }
+      
+      renderBrewScreen();
+    }
+
+    function toggleTimer() {
+      initAudio();
+      state.timerActive = !state.timerActive;
+      if (state.timerActive) {
+        state.timerInterval = setInterval(tick, 1000);
+      } else {
+        clearInterval(state.timerInterval);
+      }
+      renderBrewScreen();
+    }
+
+    function resetTimer() {
+      clearInterval(state.timerInterval);
+      state.timerActive = false;
+      state.seconds = 0;
+      state.lastBeepSecond = -1;
+      
+      DOM.activeStepCard.classList.remove('alert-active');
+      DOM.timerDisplay.classList.remove('timer-pulse');
+      
+      renderBrewScreen();
+    }
+
+    DOM.coffeeWeightInput.addEventListener('input', (e) => {
+      state.coffeeWeight = Number(e.target.value);
+      syncFromCoffee();
+      renderSetup();
+    });
+
+    DOM.coffeeWeightNumber.addEventListener('input', (e) => {
+      if (e.target.value === '') return;
+      let val = parseInt(e.target.value);
+      if (!isNaN(val)) {
+        state.coffeeWeight = val;
+        syncFromCoffee();
+        renderSetup();
+      }
+    });
+
+    DOM.coffeeWeightNumber.addEventListener('blur', (e) => {
+      if (e.target.value === '' || parseInt(e.target.value) < 1) {
+        state.coffeeWeight = 20;
+        syncFromCoffee();
+        renderSetup();
+      }
+    });
+
+    DOM.coffeeYieldInput.addEventListener('input', (e) => {
+      state.coffeeYield = Number(e.target.value);
+      syncFromYield();
+      renderSetup();
+    });
+
+    DOM.coffeeYieldNumber.addEventListener('input', (e) => {
+      if (e.target.value === '') return;
+      let val = parseInt(e.target.value);
+      if (!isNaN(val)) {
+        state.coffeeYield = val;
+        syncFromYield();
+        renderSetup();
+      }
+    });
+
+    DOM.coffeeYieldNumber.addEventListener('blur', (e) => {
+      if (e.target.value === '' || parseInt(e.target.value) < 1) {
+        state.coffeeYield = 260;
+        syncFromYield();
+        renderSetup();
+      }
+    });
+
+    DOM.startBtn.addEventListener('click', () => {
+      state.isBrewing = true;
+      
+      if (state.selectedMethod.id === 'tetsu-46') {
+        state.currentSteps = generateTetsuSteps();
+      } else if (state.selectedMethod.id === 'aeropress') {
+        state.currentSteps = generateAeropressSteps();
+      } else {
+        state.currentSteps = state.selectedMethod.steps;
+      }
+
+      initAudio();
+      DOM.setupScreen.classList.add('hidden-state');
+      DOM.brewScreen.classList.remove('hidden-state');
+      DOM.headerBackBtn.classList.remove('hidden-state');
+      DOM.brewMethodName.textContent = state.selectedMethod.name;
+      renderBrewScreen();
+    });
+
+    DOM.headerBackBtn.addEventListener('click', () => {
+      resetTimer();
+      state.isBrewing = false;
+      DOM.setupScreen.classList.remove('hidden-state');
+      DOM.brewScreen.classList.add('hidden-state');
+      DOM.headerBackBtn.classList.add('hidden-state');
+    });
+
+    DOM.playPauseBtn.addEventListener('click', toggleTimer);
+    DOM.resetBtn.addEventListener('click', resetTimer);
+
+    DOM.headerSoundBtn.addEventListener('click', () => {
+      state.soundEnabled = !state.soundEnabled;
+      if (state.soundEnabled) {
+        DOM.headerSoundBtn.className = 'p-2 rounded-full transition-colors text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-stone-800 hover:bg-amber-100 dark:hover:bg-stone-700';
+        DOM.iconVolOn.classList.remove('hidden-state');
+        DOM.iconVolOff.classList.add('hidden-state');
+      } else {
+        DOM.headerSoundBtn.className = 'p-2 rounded-full transition-colors text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700';
+        DOM.iconVolOn.classList.add('hidden-state');
+        DOM.iconVolOff.classList.remove('hidden-state');
+      }
+    });
+
+    DOM.themeToggleBtn.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      if (isDark) {
+        DOM.iconMoon.classList.add('hidden-state');
+        DOM.iconSun.classList.remove('hidden-state');
+      } else {
+        DOM.iconMoon.classList.remove('hidden-state');
+        DOM.iconSun.classList.add('hidden-state');
+      }
+    });
+
+    // Iniciar setando os valores com o primeiro método
+    syncFromCoffee();
+    renderSetup();
+    lucide.createIcons();
+  </script>
+</body>
+</html>
