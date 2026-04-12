@@ -230,7 +230,7 @@
               <i data-lucide="droplets" class="w-5 h-5 text-stone-400 dark:text-stone-500 mt-0.5"></i>
               <div>
                 <p class="text-sm font-bold text-stone-700 dark:text-stone-300">Água Total</p>
-                <p class="text-xs text-stone-500 dark:text-stone-400 leading-snug"><span id="mise-water-volume" class="font-bold text-stone-600 dark:text-stone-300"></span>, aquecida entre 92ºC e 96ºC.</p>
+                <p id="mise-water-desc" class="text-xs text-stone-500 dark:text-stone-400 leading-snug"></p>
               </div>
             </div>
 
@@ -238,7 +238,7 @@
               <i data-lucide="filter" class="w-5 h-5 text-stone-400 dark:text-stone-500 mt-0.5"></i>
               <div>
                 <p class="text-sm font-bold text-stone-700 dark:text-stone-300">Filtro</p>
-                <p class="text-xs text-stone-500 dark:text-stone-400 leading-snug">Escaldado com a água descartada logo a seguir.</p>
+                <p id="mise-filter-desc" class="text-xs text-stone-500 dark:text-stone-400 leading-snug"></p>
               </div>
             </div>
 
@@ -337,7 +337,7 @@
         description: 'O Método 4:6 divide a água em duas partes e utiliza a proporção de 1 para 15 (1g de café para 15ml de água). Os primeiros 40% controlam o equilíbrio entre doçura e acidez, enquanto os 60% restantes definem a força do café. Tudo isso usando uma moagem mais grossa para uma extração limpa.',
         ratio: 15, 
         grind: 'Grossa (tipo sal marinho)',
-        steps: [] // Preenchido dinamicamente para respeitar o ajuste de sabor e força
+        steps: [] 
       },
       {
         id: 'hoffmann-v60',
@@ -374,9 +374,9 @@
         name: 'Aeropress',
         champion: 'Versátil e Prático',
         description: 'A Aeropress utiliza pressão do ar para extrair um café encorpado. Vamos extrair uma base concentrada de 1 para 10 e, após a extração, adicionar água limpa diretamente na xícara (bypass) para atingir a proporção final de 1 para 16. O ajuste recomendado para iniciar é de exatos 16 gramas de café.',
-        ratio: 16, // A proporção total usada matematicamente é 16, mas a extração no pó é 10.
+        ratio: 16, 
         grind: 'Média para Fina',
-        steps: [] // Preenchido dinamicamente
+        steps: [] 
       }
     ];
 
@@ -412,7 +412,8 @@
       
       miseCoffeeWeight: document.getElementById('mise-coffee-weight'),
       miseGrind: document.getElementById('mise-grind'),
-      miseWaterVolume: document.getElementById('mise-water-volume'),
+      miseWaterDesc: document.getElementById('mise-water-desc'),
+      miseFilterDesc: document.getElementById('mise-filter-desc'),
 
       startBtn: document.getElementById('start-btn'),
       headerBackBtn: document.getElementById('header-back-btn'),
@@ -466,7 +467,6 @@
       let currentTime = 0;
       const interval = 45;
 
-      // Porcentagens exatas baseadas nas teorias aprofundadas do Tetsu Kasuya
       let p1, p2;
       if (state.tetsuFlavor === 'sweet') { 
         p1 = 0.166; 
@@ -485,7 +485,6 @@
       steps.push({ time: currentTime, duration: 10, title: '2º Despejo', subtitle: 'Sabor', action: 'Despeje a água de forma contínua para extrair as notas de sabor principais.', percent: p2 });
       currentTime += interval;
 
-      // Calculando Força (60% da água)
       let strengthPours;
       if (state.tetsuStrength === 'light') strengthPours = 2;
       else if (state.tetsuStrength === 'strong') strengthPours = 4;
@@ -505,10 +504,8 @@
 
     function generateAeropressSteps() {
       let steps = [];
-      // A matemática: Da água total (proporção 16), vamos usar a proporção 10 para extração (10/16 da água total)
-      // O restante da água (6/16 da água total) será usado para a diluição (bypass) direto na xícara.
-      const extracaoPercent = 10 / 16; 
-      const bypassPercent = 6 / 16;    
+      const extracaoPercent = 10 / state.selectedMethod.ratio; 
+      const bypassPercent = (state.selectedMethod.ratio - 10) / state.selectedMethod.ratio;    
 
       if (state.aeropressType === 'original') {
         steps.push({ time: 0, duration: 15, title: 'Despejo', subtitle: 'Base', action: 'Despeje a água de extração sobre o pó e dê uma leve misturada.', percent: extracaoPercent });
@@ -608,7 +605,18 @@
 
       if(DOM.miseCoffeeWeight) DOM.miseCoffeeWeight.textContent = `${state.coffeeWeight}g`;
       if(DOM.miseGrind) DOM.miseGrind.textContent = state.selectedMethod.grind.toLowerCase();
-      if(DOM.miseWaterVolume) DOM.miseWaterVolume.textContent = `${state.waterVolume}ml`;
+      
+      if (DOM.miseWaterDesc && DOM.miseFilterDesc) {
+        if (state.selectedMethod.id === 'aeropress') {
+          const brewWater = Math.round(state.coffeeWeight * 10); // Extração base 1 para 10
+          const bypassWater = state.waterVolume - brewWater;
+          DOM.miseWaterDesc.innerHTML = `<span class="font-bold text-stone-600 dark:text-stone-300">${brewWater}ml</span> para a extração principal e <span class="font-bold text-stone-600 dark:text-stone-300">${bypassWater}ml</span> de água limpa para diluição na xícara, aquecidas entre 92ºC e 96ºC.`;
+          DOM.miseFilterDesc.textContent = "Filtro de papel da Aeropress escaldado, posicionado no suporte com a água descartada.";
+        } else {
+          DOM.miseWaterDesc.innerHTML = `<span class="font-bold text-stone-600 dark:text-stone-300">${state.waterVolume}ml</span>, aquecida entre 92ºC e 96ºC.`;
+          DOM.miseFilterDesc.textContent = "Escaldado com a água descartada logo a seguir.";
+        }
+      }
 
       DOM.methodsContainer.innerHTML = '';
       METHODS.forEach(method => {
